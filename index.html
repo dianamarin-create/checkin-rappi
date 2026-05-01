@@ -1,4 +1,4 @@
-<!<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -68,7 +68,7 @@
   <!-- Rol (aparece tras seleccionar modalidad) -->
   <div id="rol-wrap" style="display:none;">
     <label>Rol <span class="req">*</span></label>
-    <select id="rol" onchange="actualizarRol()">
+    <select id="rol" onchange="actualizarPuntos()">
       <option value="">— Selecciona tu rol —</option>
     </select>
   </div>
@@ -76,7 +76,7 @@
   <!-- Ciudad (solo Remoto) -->
   <div id="ciudad-wrap" style="display:none;">
     <label>Ciudad <span class="req">*</span></label>
-    <select id="ciudad" onchange="actualizarRol()">
+    <select id="ciudad" onchange="actualizarPuntos()">
       <option value="">— Selecciona ciudad —</option>
       <option value="Bogotá">Bogotá</option>
       <option value="Medellín">Medellín</option>
@@ -316,77 +316,80 @@ const PUNTOS_TERRENO = {
 
 const ROLES_POR_MODALIDAD = {
   "Terreno": ["Brigadista","Agente","Supervisor"],
-  "Remoto":  ["Brigadista","Agente","Supervisor"]
+  "Remoto":  ["Agente","Supervisor"]
 };
 
 function actualizarOpciones() {
-  // Se llama solo cuando cambia MODALIDAD
+  // Se llama cuando cambia MODALIDAD — resetea todo
   const modalidad  = document.getElementById("modalidad").value;
+  const rolSel     = document.getElementById("rol");
   const rolWrap    = document.getElementById("rol-wrap");
   const ciudadWrap = document.getElementById("ciudad-wrap");
   const puntoWrap  = document.getElementById("punto-wrap");
-  const rolSel     = document.getElementById("rol");
   const puntoSel   = document.getElementById("punto");
+  const fotoSec    = document.getElementById("foto-section");
 
-  // Resetear todo
   rolSel.innerHTML   = '<option value="">— Selecciona tu rol —</option>';
   puntoSel.innerHTML = '<option value="">— Selecciona tu punto —</option>';
+  document.getElementById("ciudad").value = "";
   rolWrap.style.display    = "none";
   ciudadWrap.style.display = "none";
   puntoWrap.style.display  = "none";
-  const fotoSection = document.getElementById("foto-section");
-  if(fotoSection) fotoSection.style.display = "block";
+  if(fotoSec) fotoSec.style.display = "block";
 
   if(!modalidad){ verificarBoton(); return; }
 
-  // Mostrar rol
+  // Roles según modalidad
   rolWrap.style.display = "block";
   (ROLES_POR_MODALIDAD[modalidad] || []).forEach(r => {
     const o = document.createElement("option");
-    o.value = r; o.textContent = r;
-    rolSel.appendChild(o);
+    o.value = r; o.textContent = r; rolSel.appendChild(o);
   });
 
-  // Siempre mostrar ciudad primero (para todos los roles y modalidades)
+  // Ciudad siempre visible
   ciudadWrap.style.display = "block";
-
-  actualizarGPS();
   verificarBoton();
 }
 
 function actualizarRol() {
   // Se llama cuando cambia ROL o CIUDAD
-  const modalidad   = document.getElementById("modalidad").value;
-  const rol         = document.getElementById("rol").value;
-  const ciudad      = document.getElementById("ciudad") ? document.getElementById("ciudad").value : "";
-  const puntoWrap   = document.getElementById("punto-wrap");
-  const puntoSel    = document.getElementById("punto");
-  const fotoSection = document.getElementById("foto-section");
+  actualizarPuntos();
+}
 
-  // Resetear puntos
-  if(puntoSel) puntoSel.innerHTML = '<option value="">— Selecciona tu punto —</option>';
-  if(puntoWrap) puntoWrap.style.display = "none";
+function actualizarPuntos() {
+  const modalidad = document.getElementById("modalidad").value;
+  const rol       = document.getElementById("rol").value;
+  const ciudad    = document.getElementById("ciudad").value;
+  const puntoWrap = document.getElementById("punto-wrap");
+  const puntoSel  = document.getElementById("punto");
+  const fotoSec   = document.getElementById("foto-section");
 
-  // Mostrar puntos solo si: Terreno + Brigadista + ciudad seleccionada
+  // Limpiar puntos
+  puntoSel.innerHTML = '<option value="">— Selecciona tu punto —</option>';
+  puntoWrap.style.display = "none";
+
+  // Mostrar puntos SOLO para Terreno + Brigadista + ciudad seleccionada
   if(modalidad === "Terreno" && rol === "Brigadista" && ciudad){
-    const listaPuntos = PUNTOS_TERRENO[ciudad] || [];
-    if(listaPuntos.length > 0){
-      puntoWrap.style.display = "block";
-      listaPuntos.forEach(nombre => {
+    const lista = PUNTOS_TERRENO[ciudad] || [];
+    if(lista.length > 0){
+      lista.forEach(nombre => {
         const o = document.createElement("option");
         o.value = nombre; o.textContent = nombre;
         puntoSel.appendChild(o);
       });
+      puntoWrap.style.display = "block";
     }
   }
 
   // Foto: ocultar para Remoto Agente/Supervisor
-  const rolSinFoto = (modalidad === "Remoto") && (rol === "Agente" || rol === "Supervisor");
-  if(fotoSection) fotoSection.style.display = rolSinFoto ? "none" : "block";
+  const sinFoto = (modalidad === "Remoto") && (rol === "Agente" || rol === "Supervisor");
+  if(fotoSec) fotoSec.style.display = sinFoto ? "none" : "block";
 
   actualizarGPS();
   verificarBoton();
 }
+
+
 
 function actualizarRol() {
   // Se llama cuando cambia ROL o CIUDAD — no resetea el select de rol
@@ -411,43 +414,37 @@ function actualizarGPS(){
   const txt = document.getElementById("gps-txt");
   if(!gpsListo){ return; }
 
-  // Remoto: GPS solo informa, siempre válido
-  if(modalidad === "Remoto"){
-    box.className = "gps-box gps-ok";
-    txt.textContent = "Modalidad remota — ubicación registrada ✓";
-    return;
-  }
-
-  // Terreno Agente/Supervisor: solo ciudad, no valida punto
-  if(modalidad === "Terreno" && (rol === "Agente" || rol === "Supervisor")){
-    const ciudad = document.getElementById("ciudad") ? document.getElementById("ciudad").value : "";
-    if(ciudad){
-      box.className = "gps-box gps-ok";
-      txt.textContent = "Ciudad: " + ciudad + " — ubicación registrada ✓";
+  // Terreno Brigadista: validar contra el punto físico
+  if(modalidad === "Terreno" && rol === "Brigadista"){
+    const puntoEl = document.getElementById("punto");
+    const key = puntoEl ? puntoEl.value : "";
+    if(!key){
+      box.className="gps-box gps-wait";
+      txt.textContent="Selecciona tu punto para ver la distancia";
+      return;
+    }
+    const p = PUNTOS[key];
+    if(!p){ return; }
+    const dist = Math.round(haversine(uLat,uLon,p.lat,p.lon));
+    if(dist<=p.r){
+      box.className="gps-box gps-ok";
+      txt.textContent="Estás a "+dist+" m de "+key+" — dentro del rango ✓";
     } else {
-      box.className = "gps-box gps-wait";
-      txt.textContent = "Selecciona tu ciudad";
+      box.className="gps-box gps-bad";
+      txt.textContent="Estás a "+dist+" m — fuera del rango ("+p.r+" m) de "+key;
     }
     return;
   }
 
-  // Terreno Brigadista: validar contra punto
-  const puntoEl = document.getElementById("punto");
-  const key = puntoEl ? puntoEl.value : "";
-  if(!key){
-    box.className="gps-box gps-wait";
-    txt.textContent="Selecciona tu punto para ver la distancia";
-    return;
-  }
-  const p=PUNTOS[key];
-  if(!p){ return; }
-  const dist=Math.round(haversine(uLat,uLon,p.lat,p.lon));
-  if(dist<=p.r){
-    box.className="gps-box gps-ok";
-    txt.textContent="Estás a "+dist+" m de "+key+" — dentro del rango ✓";
+  // Todos los demás: registrar ciudad
+  const ciudad = document.getElementById("ciudad") ? document.getElementById("ciudad").value : "";
+  if(ciudad){
+    box.className = "gps-box gps-ok";
+    txt.textContent = (modalidad === "Remoto" ? "Remoto" : "Terreno") +
+                      " — " + ciudad + " — ubicación registrada ✓";
   } else {
-    box.className="gps-box gps-bad";
-    txt.textContent="Estás a "+dist+" m — fuera del rango ("+p.r+" m) de "+key;
+    box.className="gps-box gps-wait";
+    txt.textContent="Selecciona tu ciudad";
   }
 }
 
@@ -494,14 +491,11 @@ function verificarBoton(){
 
   let ubicacionOk = false;
 
-  if(modalidad === "Remoto"){
-    // Remoto: solo necesita ciudad
-    ubicacionOk = !!ciudad && gpsListo;
-  } else if(rol === "Brigadista"){
+  if(modalidad === "Terreno" && rol === "Brigadista"){
     // Terreno Brigadista: necesita ciudad + punto
     ubicacionOk = !!ciudad && !!puntoVal && gpsListo;
   } else {
-    // Terreno Agente/Supervisor: solo necesita ciudad
+    // Todos los demás: solo ciudad
     ubicacionOk = !!ciudad && gpsListo;
   }
 
@@ -526,10 +520,10 @@ document.getElementById("btn").onclick=async()=>{
 
   // Construir nombre del punto según modalidad y rol
   let punto = "";
-  if(esRemoto){
-    punto = ciudadVal + " - REMOTO";
-  } else if(rol === "Brigadista"){
+  if(modalidad === "Terreno" && rol === "Brigadista"){
     punto = puntoTerreno;
+  } else if(esRemoto){
+    punto = ciudadVal + " - REMOTO";
   } else {
     punto = ciudadVal + " - " + rol.toUpperCase();
   }
@@ -538,18 +532,18 @@ document.getElementById("btn").onclick=async()=>{
     alert("Completa todos los campos."); return;
   }
   if(!ciudadVal){ alert("Selecciona tu ciudad."); return; }
-  if(!esRemoto && rol === "Brigadista" && !puntoTerreno){
+  if(modalidad === "Terreno" && rol === "Brigadista" && !puntoTerreno){
     alert("Selecciona tu punto de trabajo."); return;
   }
 
-  // Foto obligatoria solo para Terreno y Remoto Brigadista
+  // Foto obligatoria para todos excepto Remoto Agente/Supervisor
   const rolSinFoto = esRemoto && (rol === "Agente" || rol === "Supervisor");
   if(!rolSinFoto && !fotoB64){ alert("Toma la foto de verificación."); return; }
   if(!uLat){ alert("Espera que el GPS termine de cargar."); return; }
 
-  // Distancia: Brigadista Terreno valida punto, resto siempre válido
+  // Distancia: solo Terreno Brigadista valida punto físico
   let dist = 0, valido = true;
-  if(!esRemoto && rol === "Brigadista"){
+  if(modalidad === "Terreno" && rol === "Brigadista"){
     const p = PUNTOS[puntoTerreno];
     if(!p){ alert("Punto no reconocido."); return; }
     dist   = Math.round(haversine(uLat,uLon,p.lat,p.lon));
