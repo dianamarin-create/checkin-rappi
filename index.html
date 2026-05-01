@@ -1,0 +1,711 @@
+<!<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Check-in Rappi</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:sans-serif;background:#f4f4f4;min-height:100vh;
+         display:flex;align-items:flex-start;justify-content:center;padding:16px;}
+    .card{background:#fff;border-radius:16px;padding:24px;width:100%;
+          max-width:420px;box-shadow:0 2px 12px rgba(0,0,0,.08);margin:auto;}
+    .logo{color:#ff441b;font-size:22px;font-weight:800;margin-bottom:2px;}
+    .sub{font-size:13px;color:#888;margin-bottom:20px;}
+    label{font-size:13px;font-weight:600;display:block;margin-bottom:4px;color:#333;}
+    input,select{width:100%;padding:11px 12px;border:1px solid #ddd;
+      border-radius:10px;font-size:15px;margin-bottom:14px;
+      background:#fafafa;color:#111;}
+    input:focus,select:focus{outline:none;border-color:#ff441b;}
+    .gps-box{border-radius:10px;padding:10px 12px;font-size:13px;
+             margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+    .gps-wait{background:#f0f0f0;color:#666;}
+    .gps-ok{background:#e6f4ea;color:#1a7a34;}
+    .gps-bad{background:#fce8e6;color:#c62828;}
+    .dot{width:8px;height:8px;border-radius:50%;background:currentColor;flex-shrink:0;}
+    .foto-area{border:2px dashed #ddd;border-radius:12px;padding:18px;
+               text-align:center;margin-bottom:14px;cursor:pointer;
+               background:#fafafa;transition:border-color .2s;}
+    .foto-area:hover{border-color:#ff441b;}
+    .foto-area p{font-size:12px;color:#888;margin-top:6px;}
+    .foto-icon{font-size:36px;color:#ccc;}
+    #preview{width:100%;border-radius:10px;display:none;margin-top:8px;}
+    #foto-input{display:none;}
+    .foto-ok{border-color:#1a7a34;background:#f0faf3;}
+    button.primary{width:100%;padding:14px;background:#ff441b;color:#fff;
+      border:none;border-radius:10px;font-size:16px;font-weight:700;
+      cursor:pointer;margin-top:4px;}
+    button.primary:disabled{background:#ccc;cursor:not-allowed;}
+    .resultado{margin-top:16px;border-radius:10px;padding:14px;
+               font-size:13px;display:none;line-height:1.7;}
+    .res-ok{background:#e6f4ea;color:#1a7a34;}
+    .res-err{background:#fce8e6;color:#c62828;}
+    .spinner{display:inline-block;width:14px;height:14px;border:2px solid #fff;
+      border-top-color:transparent;border-radius:50%;
+      animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .req{color:#ff441b;}
+    #turno-inicio, #turno-fin{margin-bottom:0;}
+    .dato-row{display:flex;justify-content:space-between;align-items:center;
+      padding:7px 0;border-bottom:0.5px solid #eee;font-size:13px;}
+    .dato-row .lbl{color:#888;font-size:12px;}
+    .dato-row .val{font-weight:600;color:#111;text-align:right;max-width:60%;}
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="logo"><span style="color:#ff441b;">R</span>appi</div>
+  <p class="sub">Registro de asistencia — Operaciones</p>
+
+  <!-- Modalidad -->
+  <label>Modalidad <span class="req">*</span></label>
+  <select id="modalidad" onchange="actualizarOpciones()">
+    <option value="">— Selecciona modalidad —</option>
+    <option value="Terreno">Terreno</option>
+    <option value="Remoto">Remoto</option>
+  </select>
+
+  <!-- Rol (aparece tras seleccionar modalidad) -->
+  <div id="rol-wrap" style="display:none;">
+    <label>Rol <span class="req">*</span></label>
+    <select id="rol" onchange="actualizarRol()">
+      <option value="">— Selecciona tu rol —</option>
+    </select>
+  </div>
+
+  <!-- Ciudad (solo Remoto) -->
+  <div id="ciudad-wrap" style="display:none;">
+    <label>Ciudad <span class="req">*</span></label>
+    <select id="ciudad" onchange="actualizarRol()">
+      <option value="">— Selecciona ciudad —</option>
+      <option value="Bogotá">Bogotá</option>
+      <option value="Medellín">Medellín</option>
+      <option value="Cali">Cali</option>
+      <option value="Barranquilla">Barranquilla</option>
+    </select>
+  </div>
+
+  <!-- Punto (solo Terreno) -->
+  <div id="punto-wrap" style="display:none;">
+    <label>Punto de trabajo <span class="req">*</span></label>
+    <select id="punto" onchange="actualizarGPS();verificarBoton()">
+      <option value="">— Selecciona tu punto —</option>
+    </select>
+  </div>
+
+  <label>ID Empleado <span class="req">*</span></label>
+  <input type="text" id="id_emp" placeholder="Ej: EMP-0042" autocomplete="off">
+
+  <label>Nombre completo <span class="req">*</span></label>
+  <input type="text" id="nombre" placeholder="Tu nombre completo" autocomplete="name">
+
+  <label>Turno <span class="req">*</span></label>
+  <div style="display:flex;gap:10px;margin-bottom:8px;">
+    <div style="flex:1;">
+      <div style="font-size:12px;color:#666;margin-bottom:4px;">Hora inicio</div>
+      <select id="turno-inicio" onchange="actualizarResumenTurno()">
+        <option value="">-- Inicio --</option>
+        <option value="07:00">07:00 am</option>
+        <option value="08:00">08:00 am</option>
+        <option value="09:00">09:00 am</option>
+        <option value="10:00">10:00 am</option>
+        <option value="11:00">11:00 am</option>
+        <option value="12:00">12:00 pm</option>
+        <option value="13:00">01:00 pm</option>
+        <option value="14:00">02:00 pm</option>
+      </select>
+    </div>
+    <div style="flex:1;">
+      <div style="font-size:12px;color:#666;margin-bottom:4px;">Hora fin</div>
+      <select id="turno-fin" onchange="actualizarResumenTurno()">
+        <option value="">-- Fin --</option>
+        <option value="15:00">03:00 pm</option>
+        <option value="16:00">04:00 pm</option>
+        <option value="17:00">05:00 pm</option>
+        <option value="18:00">06:00 pm</option>
+        <option value="19:00">07:00 pm</option>
+        <option value="20:00">08:00 pm</option>
+        <option value="21:00">09:00 pm</option>
+        <option value="22:00">10:00 pm</option>
+      </select>
+    </div>
+  </div>
+  <!-- Resumen del turno -->
+  <div id="turno-resumen" style="display:none;background:#f0f4ff;border:1px solid #c7d7f5;
+    border-radius:10px;padding:9px 14px;font-size:13px;color:#1a3a7a;
+    margin-bottom:14px;text-align:center;font-weight:600;">
+  </div>
+  <!-- Campo oculto que guarda el turno formateado -->
+  <input type="hidden" id="turno" value="">
+
+  <label>Tipo de registro <span class="req">*</span></label>
+  <select id="tipo_registro">
+    <option value="">— Inicio o fin de turno —</option>
+    <option value="Inicio de turno">Inicio de turno</option>
+    <option value="Fin de turno">Fin de turno</option>
+  </select>
+
+  <div class="gps-box gps-wait" id="gps-box">
+    <div class="dot"></div>
+    <span id="gps-txt">Obteniendo tu ubicación GPS...</span>
+  </div>
+
+  <div id="foto-section">
+  <label>Foto de verificación <span class="req">*</span> &nbsp;<small style="color:#888;font-weight:400;">(solo cámara, no galería)</small></label>
+  <div class="foto-area" id="foto-area" onclick="document.getElementById('foto-input').click()">
+    <div class="foto-icon" id="foto-icon">&#128247;</div>
+    <p id="foto-txt">Toca aquí para abrir la cámara</p>
+    <img id="preview" alt="Vista previa foto">
+  </div>
+  <input type="file" id="foto-input" accept="image/*" capture="environment">
+  </div>
+
+  <button class="primary" id="btn" disabled>Registrar turno</button>
+</div>
+
+<!-- Modal de confirmación -->
+<div id="modal-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,0.55);z-index:999;align-items:center;justify-content:center;padding:16px;">
+  <div style="background:#fff;border-radius:20px;padding:28px 24px;width:100%;max-width:400px;
+    box-shadow:0 8px 32px rgba(0,0,0,.18);">
+    
+    <!-- Header con ícono -->
+    <div style="text-align:center;margin-bottom:20px;">
+      <div id="modal-icono" style="width:64px;height:64px;border-radius:50%;
+        display:flex;align-items:center;justify-content:center;
+        font-size:32px;margin:0 auto 12px;"></div>
+      <div id="modal-titulo" style="font-size:18px;font-weight:700;"></div>
+      <div id="modal-subtitulo" style="font-size:13px;color:#888;margin-top:4px;"></div>
+    </div>
+
+    <!-- Datos del check-in -->
+    <div id="modal-datos" style="background:#f8f8f8;border-radius:12px;
+      padding:14px 16px;margin-bottom:20px;display:none;">
+      <div class="dato-row" id="dato-punto"></div>
+      <div class="dato-row" id="dato-empleado"></div>
+      <div class="dato-row" id="dato-nombre"></div>
+      <div class="dato-row" id="dato-turno"></div>
+      <div class="dato-row" id="dato-tipo"></div>
+      <div class="dato-row" id="dato-modalidad"></div>
+      <div class="dato-row" id="dato-distancia"></div>
+      <div class="dato-row" id="dato-hora" style="border-bottom:none;"></div>
+    </div>
+
+    <!-- Botón cerrar -->
+    <button onclick="cerrarModal()" style="width:100%;padding:13px;
+      background:#ff441b;color:#fff;border:none;border-radius:10px;
+      font-size:15px;font-weight:700;cursor:pointer;">
+      Cerrar
+    </button>
+  </div>
+</div>
+
+<script>
+// ══ CONFIGURACIÓN ══════════════════════════════════════════
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx5Yr3K0KuRJwAIYGyXdSR0gqpcge1qWN6aD-v-VQfAhvKhl5YyiF6KH9FZV7cLbNZY/exec"; // ← tu URL
+
+const PUNTOS = {
+  // ⚠ Verifica cada coordenada en Google Maps antes de usar en producción
+  // Abre maps.google.com, busca el lugar, clic derecho → copiar coordenadas
+  "C.C CAFAM FLORESTA":          { lat: 4.687087,  lon: -74.073431, r: 150 },
+  "Pruebas":                     { lat: 4.5718,  lon: -74.1449, r: 200 },
+  "HUB CALI": { lat: 3.468583, lon: -76.529113, r: 100 },
+  "CC CHIPICHAPE - CALI": { lat: 3.475073, lon: -76.527851, r: 150 },
+  "CC VIVA ENVIGADO - MEDELLIN": { lat: 6.176464, lon: -75.590931, r: 150 },
+  "CC MOLINOS - MEDELLIN": { lat: 6.233694, lon: -75.603667, r: 150 },
+  "C.C CENTRO MAYOR":            { lat: 4.593011,  lon: -74.125198, r: 150 },
+  "C.C COLINA":                  { lat: 4.731697,  lon: -74.066628, r: 150 },
+  "C.C ECO PLAZA MOSQUERA":      { lat: 4.7069,  lon: -74.2294, r: 150 },
+  "C.C FONTANAR CHIA":           { lat: 4.88349,  lon: -74.035892, r: 150 },
+  "C.C GRAN PLAZA BOSA":         { lat: 4.6089,  lon: -74.1712, r: 150 },
+  "C.C HAYUELOS":                { lat: 4.663163,  lon: -74.130534, r: 150 },
+  "C.C SALITRE":                 { lat: 4.6579,  lon: -74.1052, r: 150 },
+  "C.C UNICENTRO":               { lat: 4.70268,  lon: -74.041992, r: 150 },
+  "CC MERCURIO SOACHA":          { lat: 4.5782,  lon: -74.2156, r: 150 },
+  "CC PALATINO":                 { lat: 4.715724,  lon: -74.029248, r: 150 },
+  "CC PASEO VILLA EL RIO":       { lat: 4.5771,  lon: -74.1342, r: 150 },
+  "CC SANTAFE":                  { lat: 4.7633,  lon: -74.0464, r: 150 },
+  "City Parking Cra 12 # 93-43": { lat: 4.675855,  lon: -74.049004, r: 100 },
+  "EXITO COLINA":                { lat: 4.7512,  lon: -74.0758, r: 150 },
+  "HUB 63":                      { lat: 4.650447, lon: -74.067104, r: 100 },
+  "Jumbo - Santa Ana":           { lat: 4.6904,  lon: -74.0368, r: 150 },
+  "LUGANO":                      { lat: 4.642092,  lon: -74.075374, r: 150 },
+  "Mc donalds 125":              { lat: 4.70535,  lon: -74.053216, r: 100 },
+  "Muncher 61":                  { lat: 4.6476,  lon: -74.0610, r: 100 },
+  "SALVIO 93":                   { lat: 4.6762,  lon: -74.0487, r: 100 },
+  "WOK MUSEO NACIONAL":          { lat: 4.6158,  lon: -74.0680, r: 100 },
+  "WOK PLAZA CENTRAL":           { lat: 4.631513,  lon: -74.115598, r: 100 },
+  "WOK SALITRE":                 { lat: 4.653668,  lon: -74.110397, r: 100 },
+  "WOK TITAN":                   { lat: 4.694556,  lon: -74.086371, r: 100 },
+};
+// ══════════════════════════════════════════════════════════
+
+let uLat=null, uLon=null, uAcc=null, gpsListo=false, fotoB64=null;
+
+function haversine(a,b,c,d){
+  const R=6371000,r=x=>x*Math.PI/180;
+  const dl=r(c-a),do_=r(d-b);
+  const x=Math.sin(dl/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(do_/2)**2;
+  return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+}
+
+// GPS automático al cargar — con fallback para Oppo/Android
+function iniciarGPS() {
+  if (!navigator.geolocation) {
+    document.getElementById("gps-txt").textContent =
+      "Este navegador no soporta GPS. Usa Chrome.";
+    return;
+  }
+
+  // Intento 1: GPS preciso (satélite)
+  const t1 = setTimeout(() => {
+    // Si en 8 segundos no respondió, intenta con red (más rápido en Oppo)
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        if (gpsListo) return; // ya lo obtuvo el intento 1
+        uLat=pos.coords.latitude; uLon=pos.coords.longitude; uAcc=pos.coords.accuracy;
+        gpsListo=true; actualizarGPS(); verificarBoton();
+      },
+      err => {},
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 30000 }
+    );
+  }, 8000);
+
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      clearTimeout(t1);
+      uLat=pos.coords.latitude; uLon=pos.coords.longitude; uAcc=pos.coords.accuracy;
+      gpsListo=true; actualizarGPS(); verificarBoton();
+    },
+    err => {
+      clearTimeout(t1);
+      // Intento 2 directo si falla el preciso
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          uLat=pos.coords.latitude; uLon=pos.coords.longitude; uAcc=pos.coords.accuracy;
+          gpsListo=true; actualizarGPS(); verificarBoton();
+        },
+        err2 => {
+          document.getElementById("gps-box").className = "gps-box gps-bad";
+          document.getElementById("gps-txt").textContent =
+            "No se pudo obtener ubicación. Ve a Ajustes → Apps → Chrome → Permisos → Ubicación → Permitir, luego recarga la página.";
+        },
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
+      );
+    },
+    { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+  );
+}
+
+iniciarGPS();
+
+// ── PUNTOS POR MODALIDAD/ROL ──────────────────────────────
+const PUNTOS_TERRENO = {
+  "Bogotá": [
+    "C.C CAFAM FLORESTA","C.C CENTRO MAYOR","C.C COLINA","C.C ECO PLAZA MOSQUERA",
+    "C.C FONTANAR CHIA","C.C GRAN PLAZA BOSA","C.C HAYUELOS","C.C SALITRE",
+    "C.C UNICENTRO","CC MERCURIO SOACHA","CC PALATINO","CC PASEO VILLA EL RIO",
+    "CC SANTAFE","City Parking Cra 12 # 93-43","EXITO COLINA","HUB 63",
+    "Jumbo - Santa Ana","LUGANO","Mc donalds 125","Muncher 61","SALVIO 93",
+    "WOK MUSEO NACIONAL","WOK PLAZA CENTRAL","WOK SALITRE","WOK TITAN","Pruebas"
+  ],
+  "Medellín": ["CC VIVA ENVIGADO - MEDELLIN","CC MOLINOS - MEDELLIN"],
+  "Cali":     ["HUB CALI","CC CHIPICHAPE - CALI"],
+  "Barranquilla": []
+};
+
+const ROLES_POR_MODALIDAD = {
+  "Terreno": ["Brigadista","Agente","Supervisor"],
+  "Remoto":  ["Brigadista","Agente","Supervisor"]
+};
+
+function actualizarOpciones() {
+  // Se llama solo cuando cambia MODALIDAD
+  const modalidad  = document.getElementById("modalidad").value;
+  const rolWrap    = document.getElementById("rol-wrap");
+  const ciudadWrap = document.getElementById("ciudad-wrap");
+  const puntoWrap  = document.getElementById("punto-wrap");
+  const rolSel     = document.getElementById("rol");
+  const puntoSel   = document.getElementById("punto");
+
+  // Resetear todo
+  rolSel.innerHTML   = '<option value="">— Selecciona tu rol —</option>';
+  puntoSel.innerHTML = '<option value="">— Selecciona tu punto —</option>';
+  rolWrap.style.display    = "none";
+  ciudadWrap.style.display = "none";
+  puntoWrap.style.display  = "none";
+  const fotoSection = document.getElementById("foto-section");
+  if(fotoSection) fotoSection.style.display = "block";
+
+  if(!modalidad){ verificarBoton(); return; }
+
+  // Mostrar rol
+  rolWrap.style.display = "block";
+  (ROLES_POR_MODALIDAD[modalidad] || []).forEach(r => {
+    const o = document.createElement("option");
+    o.value = r; o.textContent = r;
+    rolSel.appendChild(o);
+  });
+
+  // Siempre mostrar ciudad primero (para todos los roles y modalidades)
+  ciudadWrap.style.display = "block";
+
+  actualizarGPS();
+  verificarBoton();
+}
+
+function actualizarRol() {
+  // Se llama cuando cambia ROL o CIUDAD
+  const modalidad   = document.getElementById("modalidad").value;
+  const rol         = document.getElementById("rol").value;
+  const ciudad      = document.getElementById("ciudad") ? document.getElementById("ciudad").value : "";
+  const puntoWrap   = document.getElementById("punto-wrap");
+  const puntoSel    = document.getElementById("punto");
+  const fotoSection = document.getElementById("foto-section");
+
+  // Resetear puntos
+  if(puntoSel) puntoSel.innerHTML = '<option value="">— Selecciona tu punto —</option>';
+  if(puntoWrap) puntoWrap.style.display = "none";
+
+  // Mostrar puntos solo si: Terreno + Brigadista + ciudad seleccionada
+  if(modalidad === "Terreno" && rol === "Brigadista" && ciudad){
+    const listaPuntos = PUNTOS_TERRENO[ciudad] || [];
+    if(listaPuntos.length > 0){
+      puntoWrap.style.display = "block";
+      listaPuntos.forEach(nombre => {
+        const o = document.createElement("option");
+        o.value = nombre; o.textContent = nombre;
+        puntoSel.appendChild(o);
+      });
+    }
+  }
+
+  // Foto: ocultar para Remoto Agente/Supervisor
+  const rolSinFoto = (modalidad === "Remoto") && (rol === "Agente" || rol === "Supervisor");
+  if(fotoSection) fotoSection.style.display = rolSinFoto ? "none" : "block";
+
+  actualizarGPS();
+  verificarBoton();
+}
+
+function actualizarRol() {
+  // Se llama cuando cambia ROL o CIUDAD — no resetea el select de rol
+  const modalidad   = document.getElementById("modalidad").value;
+  const rol         = document.getElementById("rol").value;
+  const fotoSection = document.getElementById("foto-section");
+
+  // Foto: ocultar para Remoto Agente y Supervisor
+  const rolSinFoto = (modalidad === "Remoto") && (rol === "Agente" || rol === "Supervisor");
+  if(fotoSection) fotoSection.style.display = rolSinFoto ? "none" : "block";
+
+  actualizarGPS();
+  verificarBoton();
+}
+
+// Rol y ciudad manejan cambios via actualizarRol()
+
+function actualizarGPS(){
+  const modalidad = document.getElementById("modalidad").value;
+  const rol       = document.getElementById("rol") ? document.getElementById("rol").value : "";
+  const box = document.getElementById("gps-box");
+  const txt = document.getElementById("gps-txt");
+  if(!gpsListo){ return; }
+
+  // Remoto: GPS solo informa, siempre válido
+  if(modalidad === "Remoto"){
+    box.className = "gps-box gps-ok";
+    txt.textContent = "Modalidad remota — ubicación registrada ✓";
+    return;
+  }
+
+  // Terreno Agente/Supervisor: solo ciudad, no valida punto
+  if(modalidad === "Terreno" && (rol === "Agente" || rol === "Supervisor")){
+    const ciudad = document.getElementById("ciudad") ? document.getElementById("ciudad").value : "";
+    if(ciudad){
+      box.className = "gps-box gps-ok";
+      txt.textContent = "Ciudad: " + ciudad + " — ubicación registrada ✓";
+    } else {
+      box.className = "gps-box gps-wait";
+      txt.textContent = "Selecciona tu ciudad";
+    }
+    return;
+  }
+
+  // Terreno Brigadista: validar contra punto
+  const puntoEl = document.getElementById("punto");
+  const key = puntoEl ? puntoEl.value : "";
+  if(!key){
+    box.className="gps-box gps-wait";
+    txt.textContent="Selecciona tu punto para ver la distancia";
+    return;
+  }
+  const p=PUNTOS[key];
+  if(!p){ return; }
+  const dist=Math.round(haversine(uLat,uLon,p.lat,p.lon));
+  if(dist<=p.r){
+    box.className="gps-box gps-ok";
+    txt.textContent="Estás a "+dist+" m de "+key+" — dentro del rango ✓";
+  } else {
+    box.className="gps-box gps-bad";
+    txt.textContent="Estás a "+dist+" m — fuera del rango ("+p.r+" m) de "+key;
+  }
+}
+
+// Foto solo desde cámara
+document.getElementById("foto-input").addEventListener("change",function(){
+  const file=this.files[0];
+  if(!file)return;
+  // Comprimir imagen antes de enviar para evitar base64 truncado
+  const img = new Image();
+  const urlTemp = URL.createObjectURL(file);
+  img.onload = function() {
+    const canvas = document.createElement("canvas");
+    const MAX = 800; // máximo 800px de ancho
+    let w = img.width, h = img.height;
+    if(w > MAX){ h = Math.round(h * MAX / w); w = MAX; }
+    canvas.width = w; canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0, w, h);
+    fotoB64 = canvas.toDataURL("image/jpeg", 0.7); // calidad 70%
+    URL.revokeObjectURL(urlTemp);
+    const prev=document.getElementById("preview");
+    prev.src=fotoB64; prev.style.display="block";
+    document.getElementById("foto-icon").style.display="none";
+    document.getElementById("foto-txt").textContent="✓ Foto tomada correctamente";
+    document.getElementById("foto-area").classList.add("foto-ok");
+    verificarBoton();
+  };
+  img.src = urlTemp;
+});
+
+function verificarBoton(){
+  const modalidad = document.getElementById("modalidad").value;
+  const rol       = document.getElementById("rol") ? document.getElementById("rol").value : "";
+  const tinicio   = document.getElementById("turno-inicio") ? document.getElementById("turno-inicio").value : "";
+  const tfin      = document.getElementById("turno-fin")    ? document.getElementById("turno-fin").value    : "";
+
+  if(!modalidad || !rol || !tinicio || !tfin){
+    document.getElementById("btn").disabled = true; return;
+  }
+
+  const ciudad   = document.getElementById("ciudad")  ? document.getElementById("ciudad").value  : "";
+  const puntoEl  = document.getElementById("punto");
+  const puntoVal = puntoEl ? puntoEl.value : "";
+
+  let ubicacionOk = false;
+
+  if(modalidad === "Remoto"){
+    // Remoto: solo necesita ciudad
+    ubicacionOk = !!ciudad && gpsListo;
+  } else if(rol === "Brigadista"){
+    // Terreno Brigadista: necesita ciudad + punto
+    ubicacionOk = !!ciudad && !!puntoVal && gpsListo;
+  } else {
+    // Terreno Agente/Supervisor: solo necesita ciudad
+    ubicacionOk = !!ciudad && gpsListo;
+  }
+
+  // Foto no requerida para Remoto Agente/Supervisor
+  const rolSinFoto = (modalidad === "Remoto") && (rol === "Agente" || rol === "Supervisor");
+  const fotoOk = rolSinFoto ? true : !!fotoB64;
+
+  document.getElementById("btn").disabled = !(ubicacionOk && fotoOk);
+}
+
+document.getElementById("btn").onclick=async()=>{
+  const modalidad = document.getElementById("modalidad").value;
+  const rol       = document.getElementById("rol").value;
+  const id        = document.getElementById("id_emp").value.trim();
+  const nombre    = document.getElementById("nombre").value.trim();
+  const turno     = document.getElementById("turno").value;
+  const tipo_reg  = document.getElementById("tipo_registro").value;
+  const esRemoto  = modalidad === "Remoto";
+
+  const ciudadVal    = document.getElementById("ciudad")  ? document.getElementById("ciudad").value  : "";
+  const puntoTerreno = document.getElementById("punto")   ? document.getElementById("punto").value   : "";
+
+  // Construir nombre del punto según modalidad y rol
+  let punto = "";
+  if(esRemoto){
+    punto = ciudadVal + " - REMOTO";
+  } else if(rol === "Brigadista"){
+    punto = puntoTerreno;
+  } else {
+    punto = ciudadVal + " - " + rol.toUpperCase();
+  }
+
+  if(!modalidad||!rol||!id||!nombre||!turno||!tipo_reg){
+    alert("Completa todos los campos."); return;
+  }
+  if(!ciudadVal){ alert("Selecciona tu ciudad."); return; }
+  if(!esRemoto && rol === "Brigadista" && !puntoTerreno){
+    alert("Selecciona tu punto de trabajo."); return;
+  }
+
+  // Foto obligatoria solo para Terreno y Remoto Brigadista
+  const rolSinFoto = esRemoto && (rol === "Agente" || rol === "Supervisor");
+  if(!rolSinFoto && !fotoB64){ alert("Toma la foto de verificación."); return; }
+  if(!uLat){ alert("Espera que el GPS termine de cargar."); return; }
+
+  // Distancia: Brigadista Terreno valida punto, resto siempre válido
+  let dist = 0, valido = true;
+  if(!esRemoto && rol === "Brigadista"){
+    const p = PUNTOS[puntoTerreno];
+    if(!p){ alert("Punto no reconocido."); return; }
+    dist   = Math.round(haversine(uLat,uLon,p.lat,p.lon));
+    valido = dist <= p.r;
+  }
+
+  const btn=document.getElementById("btn");
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner"></span>Registrando...';
+
+  const payload = JSON.stringify({
+    punto, id_empleado:id, nombre, turno, tipo_registro:tipo_reg,
+    modalidad, rol, ciudad: ciudadVal,
+    lat:uLat, lon:uLon, accuracy:uAcc,
+    distancia:dist, valido,
+    foto: rolSinFoto ? "" : fotoB64
+  });
+
+  let enviado = false;
+  try {
+    await fetch(SCRIPT_URL, {
+      method:"POST", mode:"no-cors",
+      headers:{"Content-Type":"text/plain"},
+      body: payload
+    });
+    enviado = true;
+  } catch(e1) {
+    try {
+      await fetch(SCRIPT_URL, { method:"POST", body: payload });
+      enviado = true;
+    } catch(e2) {
+      try {
+        const mini = JSON.stringify({
+          punto, id_empleado:id, nombre, turno, tipo_registro:tipo_reg,
+          modalidad, rol, ciudad: ciudadVal,
+          lat:uLat, lon:uLon, accuracy:uAcc,
+          distancia:dist, valido, foto:""
+        });
+        await fetch(SCRIPT_URL+"?data="+encodeURIComponent(mini),
+          { method:"GET", mode:"no-cors" });
+        enviado = true;
+      } catch(e3){ enviado = false; }
+    }
+  }
+
+  btn.disabled=false;
+  btn.textContent="Registrar turno";
+
+  if(enviado){
+    mostrarModal(valido, punto, id, nombre, turno, dist);
+  } else {
+    alert("Error de conexión. Verifica tu internet e intenta de nuevo.");
+  }
+};
+
+function actualizarResumenTurno() {
+  const inicio = document.getElementById("turno-inicio").value;
+  const fin    = document.getElementById("turno-fin").value;
+  const resumen = document.getElementById("turno-resumen");
+  const hidden  = document.getElementById("turno");
+
+  if (inicio && fin) {
+    const turnoStr = inicio + " - " + fin;
+    hidden.value   = turnoStr;
+    resumen.style.display = "block";
+    resumen.textContent   = "Turno: " + turnoStr;
+  } else {
+    hidden.value = "";
+    resumen.style.display = "none";
+  }
+  verificarBoton();
+}
+
+function mostrarModal(valido, punto, id, nombre, turno, dist) {
+  const overlay = document.getElementById("modal-overlay");
+  overlay.style.display = "flex";
+
+  const icono    = document.getElementById("modal-icono");
+  const titulo   = document.getElementById("modal-titulo");
+  const subtitulo= document.getElementById("modal-subtitulo");
+  const datos    = document.getElementById("modal-datos");
+
+  const ahora = new Date().toLocaleString("es-CO", { timeZone: "America/Bogota" });
+
+  if (valido) {
+    icono.style.background = "#e6f4ea";
+    icono.innerHTML = "✓";
+    icono.style.color = "#1a7a34";
+    icono.style.fontSize = "28px";
+    icono.style.fontWeight = "700";
+    titulo.style.color = "#1a7a34";
+    titulo.textContent = "Check-in registrado";
+    subtitulo.textContent = "Tu asistencia fue confirmada correctamente";
+    datos.style.display = "block";
+  } else {
+    icono.style.background = "#fce8e6";
+    icono.innerHTML = "✗";
+    icono.style.color = "#c62828";
+    icono.style.fontSize = "28px";
+    icono.style.fontWeight = "700";
+    titulo.style.color = "#c62828";
+    titulo.textContent = "Fuera de rango";
+    subtitulo.textContent = "Estás a " + dist + " m — necesitas estar dentro de " + document.getElementById("punto") && PUNTOS[punto] ? PUNTOS[punto].r : 150 + " m";
+    datos.style.display = "none";
+  }
+
+  document.getElementById("dato-punto").innerHTML =
+    '<span class="lbl">Punto</span><span class="val">' + punto + '</span>';
+  document.getElementById("dato-empleado").innerHTML =
+    '<span class="lbl">ID Empleado</span><span class="val">' + id + '</span>';
+  document.getElementById("dato-nombre").innerHTML =
+    '<span class="lbl">Nombre</span><span class="val">' + nombre + '</span>';
+  document.getElementById("dato-turno").innerHTML =
+    '<span class="lbl">Turno</span><span class="val">' + turno + '</span>';
+  document.getElementById("dato-tipo").innerHTML =
+    '<span class="lbl">Registro</span><span class="val">' + (document.getElementById("tipo_registro").value) + '</span>';
+  const _mod = document.getElementById("modalidad").value;
+  const _rol = document.getElementById("rol").value;
+  document.getElementById("dato-modalidad").innerHTML =
+    '<span class="lbl">Modalidad / Rol</span><span class="val">' + _mod + ' — ' + _rol + '</span>';
+  document.getElementById("dato-distancia").innerHTML =
+    '<span class="lbl">Distancia</span><span class="val">' + dist + ' m del punto</span>';
+  document.getElementById("dato-hora").innerHTML =
+    '<span class="lbl">Hora registro</span><span class="val">' + ahora + '</span>';
+}
+
+function cerrarModal() {
+  document.getElementById("modal-overlay").style.display = "none";
+  // Limpiar formulario para siguiente registro
+  document.getElementById("modalidad").value = "";
+  if(document.getElementById("ciudad")) document.getElementById("ciudad").value = "";
+  document.getElementById("tipo_registro").value = "";
+  document.getElementById("rol").value = "";
+  document.getElementById("rol-wrap").style.display = "none";
+  document.getElementById("ciudad-wrap").style.display = "none";
+  document.getElementById("punto-wrap").style.display = "none";
+  document.getElementById("turno-resumen").style.display = "none";
+  document.getElementById("turno-inicio").value = "";
+  document.getElementById("turno-fin").value = "";
+  document.getElementById("turno").value = "";
+  document.getElementById("turno-inicio").value = "";
+  document.getElementById("turno-fin").value = "";
+  document.getElementById("turno").value = "";
+  document.getElementById("turno-resumen").style.display = "none";
+  document.getElementById("id_emp").value = "";
+  document.getElementById("nombre").value = "";
+  document.getElementById("turno").value = "";
+  document.getElementById("preview").style.display = "none";
+  document.getElementById("foto-icon").style.display = "block";
+  document.getElementById("foto-txt").textContent = "Toca aquí para abrir la cámara";
+  document.getElementById("foto-area").classList.remove("foto-ok");
+  fotoB64 = null;
+  document.getElementById("btn").disabled = true;
+  document.getElementById("gps-box").className = "gps-box gps-wait";
+  document.getElementById("gps-txt").textContent = "Selecciona tu punto para ver la distancia";
+}
+</script>
+</body>
+</html>
