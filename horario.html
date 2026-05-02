@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Mi Horario — Rappi</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --rappi: #ff441b;
+      --rappi-soft: #fff2ef;
+      --dark: #1a1a1a;
+      --mid: #6b6b6b;
+      --light: #f4f4f2;
+      --border: #e8e8e4;
+      --ok: #1a9e5a;
+      --ok-bg: #e8f7ef;
+      --rest: #9e6b1a;
+      --rest-bg: #fef6e7;
+      --inc: #1a6b9e;
+      --inc-bg: #e7f2fe;
+      --aus: #c62828;
+      --aus-bg: #fce8e8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--light);
+      min-height: 100vh;
+      color: var(--dark);
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: var(--dark);
+      padding: 20px 20px 16px;
+      position: sticky; top: 0; z-index: 10;
+    }
+    .header-inner {
+      max-width: 480px; margin: 0 auto;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .logo-r {
+      width: 32px; height: 32px; background: var(--rappi);
+      border-radius: 8px; display: flex; align-items: center;
+      justify-content: center; color: #fff;
+      font-size: 16px; font-weight: 600; flex-shrink: 0;
+    }
+    .header-title { color: #fff; font-size: 15px; font-weight: 500; }
+    .header-sub { color: #888; font-size: 12px; }
+
+    /* ── SEARCH ── */
+    .search-wrap {
+      max-width: 480px; margin: 0 auto;
+      padding: 16px 20px;
+    }
+    .search-box {
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .search-box input {
+      border: none; outline: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px; color: var(--dark);
+      background: transparent; width: 100%;
+    }
+    .search-box input::placeholder { color: #bbb; }
+    .search-icon { color: #bbb; flex-shrink: 0; }
+    .search-clear {
+      color: #bbb; cursor: pointer; flex-shrink: 0;
+      font-size: 18px; line-height: 1; display: none;
+    }
+
+    /* ── SUGGESTIONS ── */
+    .suggestions {
+      max-width: 480px; margin: 0 auto;
+      padding: 0 20px 8px;
+      display: none;
+    }
+    .suggestions.visible { display: block; }
+    .sug-list {
+      background: #fff; border: 1px solid var(--border);
+      border-radius: 12px; overflow: hidden;
+    }
+    .sug-item {
+      padding: 12px 16px; cursor: pointer;
+      font-size: 14px; border-bottom: 0.5px solid var(--border);
+      transition: background .1s;
+    }
+    .sug-item:last-child { border-bottom: none; }
+    .sug-item:hover { background: var(--light); }
+    .sug-name { font-weight: 500; color: var(--dark); }
+    .sug-rol { font-size: 12px; color: var(--mid); margin-top: 1px; }
+
+    /* ── CONTENT ── */
+    .content {
+      max-width: 480px; margin: 0 auto;
+      padding: 0 20px 32px;
+    }
+
+    /* ── ESTADO VACÍO ── */
+    .empty-state {
+      text-align: center; padding: 48px 24px;
+    }
+    .empty-icon {
+      width: 56px; height: 56px; background: var(--border);
+      border-radius: 16px; margin: 0 auto 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+    }
+    .empty-title { font-size: 15px; font-weight: 500; margin-bottom: 6px; }
+    .empty-sub { font-size: 13px; color: var(--mid); line-height: 1.5; }
+
+    /* ── PERFIL ── */
+    .perfil {
+      background: var(--dark); border-radius: 16px;
+      padding: 16px; margin-bottom: 16px;
+      display: none;
+    }
+    .perfil.visible { display: block; }
+    .perfil-top {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 12px;
+    }
+    .avatar {
+      width: 44px; height: 44px; border-radius: 12px;
+      background: var(--rappi); display: flex;
+      align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 600; color: #fff; flex-shrink: 0;
+    }
+    .perfil-nombre { color: #fff; font-size: 15px; font-weight: 600; }
+    .perfil-cedula { color: #888; font-size: 12px; font-family: 'DM Mono', monospace; }
+    .semana-label {
+      color: #888; font-size: 11px; text-transform: uppercase;
+      letter-spacing: .5px; font-weight: 500;
+    }
+    .semana-rango { color: #fff; font-size: 13px; font-weight: 500; margin-top: 2px; }
+
+    /* ── RESUMEN ── */
+    .resumen-grid {
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px; margin-bottom: 16px; display: none;
+    }
+    .resumen-grid.visible { display: grid; }
+    .res-card {
+      background: #fff; border-radius: 12px;
+      padding: 10px 12px; border: 0.5px solid var(--border);
+    }
+    .res-num { font-size: 22px; font-weight: 600; color: var(--dark); }
+    .res-lbl { font-size: 11px; color: var(--mid); margin-top: 1px; }
+
+    /* ── TARJETAS DE DÍA ── */
+    .dias-titulo {
+      font-size: 12px; font-weight: 500; color: var(--mid);
+      text-transform: uppercase; letter-spacing: .5px;
+      margin-bottom: 10px; display: none;
+    }
+    .dias-titulo.visible { display: block; }
+
+    .dia-card {
+      background: #fff; border-radius: 14px;
+      border: 0.5px solid var(--border);
+      margin-bottom: 10px; overflow: hidden;
+      display: none;
+    }
+    .dia-card.visible { display: block; }
+
+    .dia-header {
+      display: flex; align-items: center;
+      padding: 12px 14px; gap: 12px;
+    }
+    .dia-fecha-col { min-width: 44px; text-align: center; }
+    .dia-num { font-size: 22px; font-weight: 600; line-height: 1; }
+    .dia-mes { font-size: 11px; color: var(--mid); text-transform: uppercase; letter-spacing: .3px; }
+    .dia-dow {
+      font-size: 11px; font-weight: 500;
+      text-transform: uppercase; letter-spacing: .5px;
+      padding: 2px 8px; border-radius: 20px;
+      background: var(--light); color: var(--mid);
+    }
+    .dia-dow.hoy {
+      background: var(--rappi); color: #fff;
+    }
+    .dia-estado { margin-left: auto; }
+
+    /* badges de estado */
+    .badge {
+      font-size: 11px; font-weight: 500;
+      padding: 4px 10px; border-radius: 20px;
+      white-space: nowrap;
+    }
+    .badge-ok { background: var(--ok-bg); color: var(--ok); }
+    .badge-de { background: var(--rest-bg); color: var(--rest); }
+    .badge-inc { background: var(--inc-bg); color: var(--inc); }
+    .badge-aus { background: var(--aus-bg); color: var(--aus); }
+    .badge-vac { background: #f3e5f5; color: #6a1b9a; }
+
+    /* detalle del turno */
+    .dia-detalle {
+      border-top: 0.5px solid var(--border);
+      padding: 10px 14px;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .detalle-bloque { display: flex; flex-direction: column; }
+    .detalle-lbl { font-size: 11px; color: var(--mid); }
+    .detalle-val {
+      font-size: 15px; font-weight: 600;
+      font-family: 'DM Mono', monospace;
+      color: var(--dark);
+    }
+    .detalle-sep { color: var(--border); font-size: 20px; }
+    .detalle-punto {
+      margin-left: auto; text-align: right;
+    }
+    .detalle-punto .detalle-lbl { text-align: right; }
+    .detalle-punto .detalle-val {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px; font-weight: 500;
+      color: var(--mid);
+    }
+
+    /* hoy highlight */
+    .dia-card.hoy-card {
+      border-color: var(--rappi);
+      box-shadow: 0 0 0 2px var(--rappi-soft);
+    }
+    .dia-card.hoy-card .dia-num { color: var(--rappi); }
+
+    /* cargando */
+    .loading {
+      text-align: center; padding: 32px;
+      color: var(--mid); font-size: 13px; display: none;
+    }
+    .spinner {
+      width: 20px; height: 20px; border: 2px solid var(--border);
+      border-top-color: var(--rappi); border-radius: 50%;
+      animation: spin .7s linear infinite;
+      margin: 0 auto 10px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* error */
+    .error-msg {
+      background: var(--aus-bg); color: var(--aus);
+      border-radius: 10px; padding: 12px 14px;
+      font-size: 13px; margin-bottom: 16px; display: none;
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-inner">
+    <div class="logo-r">R</div>
+    <div>
+      <div class="header-title">Mi Horario</div>
+      <div class="header-sub">Operaciones — Semana actual</div>
+    </div>
+  </div>
+</div>
+
+<!-- SEARCH -->
+<div class="search-wrap">
+  <div class="search-box">
+    <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" id="buscar" placeholder="Escribe tu nombre..." autocomplete="off" autocorrect="off">
+    <span class="search-clear" id="clear-btn" onclick="limpiar()">×</span>
+  </div>
+</div>
+
+<!-- SUGERENCIAS -->
+<div class="suggestions" id="suggestions">
+  <div class="sug-list" id="sug-list"></div>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+  <div class="error-msg" id="error-msg"></div>
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    Cargando horario...
+  </div>
+
+  <!-- Perfil -->
+  <div class="perfil" id="perfil">
+    <div class="perfil-top">
+      <div class="avatar" id="avatar-initials">--</div>
+      <div>
+        <div class="perfil-nombre" id="perfil-nombre">—</div>
+        <div class="perfil-cedula" id="perfil-cedula">—</div>
+      </div>
+    </div>
+    <div class="semana-label">Semana actual</div>
+    <div class="semana-rango" id="semana-rango">—</div>
+  </div>
+
+  <!-- Resumen -->
+  <div class="resumen-grid" id="resumen">
+    <div class="res-card">
+      <div class="res-num" id="res-dias">—</div>
+      <div class="res-lbl">Días trabajo</div>
+    </div>
+    <div class="res-card">
+      <div class="res-num" id="res-horas">—</div>
+      <div class="res-lbl">Horas sem.</div>
+    </div>
+    <div class="res-card">
+      <div class="res-num" id="res-descansos">—</div>
+      <div class="res-lbl">Descansos</div>
+    </div>
+  </div>
+
+  <!-- Título días -->
+  <div class="dias-titulo" id="dias-titulo">Días de la semana</div>
+
+  <!-- Cards de días (se generan dinámicamente) -->
+  <div id="dias-container"></div>
+
+  <!-- Estado vacío inicial -->
+  <div class="empty-state" id="empty-state">
+    <div class="empty-icon">📅</div>
+    <div class="empty-title">Busca tu nombre</div>
+    <div class="empty-sub">Escribe tu nombre arriba para ver<br>tu horario de la semana actual.</div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// CONFIGURACIÓN — edita estas 2 líneas
+// ══════════════════════════════════════════════════════
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyhfiHTeXuOntLqzeapmRy7M_-TuiZvAcDqdXo_EGpapBgjpPce1-Dq-ksjYHPACOMN4Q/exec";
+const SHEET_ID   = "11ZXfVvR9u1085RzOwg5JBO9YBIGiiufduGXtKRmv9Gw";
+// ══════════════════════════════════════════════════════
+
+// Días y meses en español
+const DIAS  = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+const MESES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+const DIAS_FULL = ["Domingo","Lunes","Martes","Miércoles","Jueves","Viernes","Sábado"];
+
+let todosLosEmpleados = [];
+let empleadoActual    = null;
+
+// Obtener semana actual (lunes a domingo)
+function getSemanaActual() {
+  const hoy = new Date();
+  const dow  = hoy.getDay(); // 0=dom
+  const lunes = new Date(hoy);
+  lunes.setDate(hoy.getDate() - (dow === 0 ? 6 : dow - 1));
+  lunes.setHours(0,0,0,0);
+  const dias = [];
+  for(let i=0; i<7; i++){
+    const d = new Date(lunes);
+    d.setDate(lunes.getDate() + i);
+    dias.push(d);
+  }
+  return dias;
+}
+
+function formatFecha(d) {
+  return String(d.getDate()).padStart(2,'0') + '/' +
+         String(d.getMonth()+1).padStart(2,'0') + '/' +
+         d.getFullYear();
+}
+
+function esHoy(d) {
+  const h = new Date();
+  return d.getDate()===h.getDate() && d.getMonth()===h.getMonth() && d.getFullYear()===h.getFullYear();
+}
+
+function initiales(nombre) {
+  return nombre.split(' ').slice(0,2).map(p=>p[0]).join('').toUpperCase();
+}
+
+// Cargar lista de empleados desde el Apps Script
+async function cargarEmpleados() {
+  try {
+    const resp = await fetch(SCRIPT_URL + "?action=getEmpleados");
+    const data = await resp.json();
+    if(data.ok) todosLosEmpleados = data.empleados;
+  } catch(e) {
+    // Si falla, usar datos de ejemplo para preview
+    todosLosEmpleados = [
+      { nombre: "Anderson Roa",    cedula: "1020777056" },
+      { nombre: "Anggy Chacon",    cedula: "1018517750" },
+      { nombre: "Kevin Avendaño",  cedula: "1023025849" },
+      { nombre: "Martha Zapata",   cedula: "1018436721" },
+      { nombre: "Wilson Sanchez",  cedula: "1033784410" },
+    ];
+  }
+}
+
+// Cargar horario de un empleado
+async function cargarHorario(cedula) {
+  mostrarLoading(true);
+  ocultarError();
+  const semana = getSemanaActual();
+  const fechaIni = formatFecha(semana[0]);
+  const fechaFin = formatFecha(semana[6]);
+  try {
+    const resp = await fetch(
+      `${SCRIPT_URL}?action=getHorarioColaborador&cedula=${cedula}&fechaIni=${fechaIni}&fechaFin=${fechaFin}`
+    );
+    const data = await resp.json();
+    mostrarLoading(false);
+    if(data.ok) renderHorario(data.horario, semana);
+    else mostrarError("No se encontró horario para esta semana.");
+  } catch(e) {
+    mostrarLoading(false);
+    // Preview con datos de ejemplo
+    const ejemplo = generarEjemplo(semana);
+    renderHorario(ejemplo, semana);
+  }
+}
+
+function generarEjemplo(semana) {
+  const turnos = [
+    { entrada:"07:00", salida:"16:00", punto:"CC Santafé" },
+    { entrada:"DE",    salida:"DE",    punto:"" },
+    { entrada:"10:00", salida:"18:00", punto:"C.C Colina" },
+    { entrada:"10:00", salida:"18:00", punto:"C.C Unicentro" },
+    { entrada:"12:00", salida:"20:00", punto:"CC Palatino" },
+    { entrada:"DE",    salida:"DE",    punto:"" },
+    { entrada:"",      salida:"",      punto:"" },
+  ];
+  return semana.map((d,i) => ({
+    fecha: formatFecha(d),
+    entrada: turnos[i].entrada,
+    salida:  turnos[i].salida,
+    punto:   turnos[i].punto,
+  }));
+}
+
+function renderHorario(horario, semana) {
+  const emp = empleadoActual;
+
+  // Perfil
+  document.getElementById("avatar-initials").textContent = initiales(emp.nombre);
+  document.getElementById("perfil-nombre").textContent   = emp.nombre;
+  document.getElementById("perfil-cedula").textContent   = emp.cedula;
+  document.getElementById("semana-rango").textContent    =
+    DIAS_FULL[semana[0].getDay()] + " " + semana[0].getDate() + " " + MESES[semana[0].getMonth()] +
+    " — " + DIAS_FULL[semana[6].getDay()] + " " + semana[6].getDate() + " " + MESES[semana[6].getMonth()];
+  document.getElementById("perfil").classList.add("visible");
+
+  // Calcular resumen
+  let diasTrabajo=0, totalMin=0, descansos=0;
+  horario.forEach(d => {
+    const cod = (d.entrada||"").toUpperCase();
+    if(cod === "DE") { descansos++; return; }
+    if(!d.entrada || !d.salida || cod==="INC" || cod==="VAC" || cod==="") return;
+    diasTrabajo++;
+    const [hE,mE] = d.entrada.split(":").map(Number);
+    const [hS,mS] = d.salida.split(":").map(Number);
+    totalMin += (hS*60+mS) - (hE*60+mE);
+  });
+  document.getElementById("res-dias").textContent      = diasTrabajo;
+  document.getElementById("res-horas").textContent     = Math.round(totalMin/60) + "h";
+  document.getElementById("res-descansos").textContent = descansos;
+  document.getElementById("resumen").classList.add("visible");
+  document.getElementById("dias-titulo").classList.add("visible");
+  document.getElementById("empty-state").style.display = "none";
+
+  // Generar tarjetas
+  const cont = document.getElementById("dias-container");
+  cont.innerHTML = "";
+  horario.forEach((dia, i) => {
+    const fecha = semana[i];
+    const hoy   = esHoy(fecha);
+    const cod   = (dia.entrada||"").toUpperCase();
+    const card  = document.createElement("div");
+    card.className = "dia-card visible" + (hoy ? " hoy-card" : "");
+
+    // Header
+    let badgeHtml = "";
+    if(cod === "DE")       badgeHtml = '<span class="badge badge-de">Descanso</span>';
+    else if(cod === "INC") badgeHtml = '<span class="badge badge-inc">Incapacidad</span>';
+    else if(cod === "VAC") badgeHtml = '<span class="badge badge-vac">Vacaciones</span>';
+    else if(!dia.entrada)  badgeHtml = '<span class="badge badge-aus">Sin asignar</span>';
+    else                   badgeHtml = '<span class="badge badge-ok">Trabajo</span>';
+
+    card.innerHTML = `
+      <div class="dia-header">
+        <div class="dia-fecha-col">
+          <div class="dia-num">${fecha.getDate()}</div>
+          <div class="dia-mes">${MESES[fecha.getMonth()]}</div>
+        </div>
+        <span class="dia-dow${hoy?' hoy':''}">${DIAS[fecha.getDay()]}</span>
+        <div class="dia-estado">${badgeHtml}</div>
+      </div>
+      ${(['DE','INC','VAC'].includes(cod) || !dia.entrada) ? '' : `
+      <div class="dia-detalle">
+        <div class="detalle-bloque">
+          <div class="detalle-lbl">Entrada</div>
+          <div class="detalle-val">${dia.entrada}</div>
+        </div>
+        <div class="detalle-sep">›</div>
+        <div class="detalle-bloque">
+          <div class="detalle-lbl">Salida</div>
+          <div class="detalle-val">${dia.salida}</div>
+        </div>
+        ${dia.punto ? `
+        <div class="detalle-punto">
+          <div class="detalle-lbl">Punto</div>
+          <div class="detalle-val">${dia.punto}</div>
+        </div>` : ''}
+      </div>`}
+    `;
+    cont.appendChild(card);
+  });
+}
+
+// UI helpers
+function mostrarLoading(v) {
+  document.getElementById("loading").style.display = v ? "block" : "none";
+}
+function mostrarError(msg) {
+  const el = document.getElementById("error-msg");
+  el.textContent = msg; el.style.display = "block";
+}
+function ocultarError() {
+  document.getElementById("error-msg").style.display = "none";
+}
+function limpiar() {
+  document.getElementById("buscar").value = "";
+  document.getElementById("clear-btn").style.display = "none";
+  document.getElementById("suggestions").classList.remove("visible");
+  document.getElementById("perfil").classList.remove("visible");
+  document.getElementById("resumen").classList.remove("visible");
+  document.getElementById("dias-titulo").classList.remove("visible");
+  document.getElementById("dias-container").innerHTML = "";
+  document.getElementById("empty-state").style.display = "block";
+  empleadoActual = null;
+}
+
+// Búsqueda
+document.getElementById("buscar").addEventListener("input", function() {
+  const q = this.value.trim().toLowerCase();
+  const clearBtn = document.getElementById("clear-btn");
+  clearBtn.style.display = q ? "inline" : "none";
+  if(q.length < 2) {
+    document.getElementById("suggestions").classList.remove("visible");
+    return;
+  }
+  const matches = todosLosEmpleados.filter(e =>
+    e.nombre.toLowerCase().includes(q)
+  ).slice(0,5);
+  const list = document.getElementById("sug-list");
+  list.innerHTML = "";
+  if(matches.length === 0) {
+    document.getElementById("suggestions").classList.remove("visible");
+    return;
+  }
+  matches.forEach(emp => {
+    const item = document.createElement("div");
+    item.className = "sug-item";
+    item.innerHTML = `<div class="sug-name">${emp.nombre}</div><div class="sug-rol">Cédula: ${emp.cedula}</div>`;
+    item.onclick = () => seleccionarEmpleado(emp);
+    list.appendChild(item);
+  });
+  document.getElementById("suggestions").classList.add("visible");
+});
+
+function seleccionarEmpleado(emp) {
+  empleadoActual = emp;
+  document.getElementById("buscar").value = emp.nombre;
+  document.getElementById("clear-btn").style.display = "inline";
+  document.getElementById("suggestions").classList.remove("visible");
+  cargarHorario(emp.cedula);
+}
+
+// Cerrar sugerencias al tocar fuera
+document.addEventListener("click", e => {
+  if(!e.target.closest(".search-wrap") && !e.target.closest(".suggestions"))
+    document.getElementById("suggestions").classList.remove("visible");
+});
+
+// Iniciar
+cargarEmpleados();
+</script>
+</body>
+</html>

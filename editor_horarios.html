@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Editor de Horarios — Rappi Ops</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --rappi: #ff441b;
+      --rappi-soft: #fff2ef;
+      --dark: #111;
+      --mid: #666;
+      --light: #f5f5f3;
+      --border: #e5e5e0;
+      --white: #fff;
+      --ok: #0f6e56; --ok-bg: #e8f7ef;
+      --de: #854f0b; --de-bg: #fef6e7;
+      --inc: #185fa5; --inc-bg: #e7f2fe;
+      --vac: #6a1b9a; --vac-bg: #f3e5f5;
+      --aus: #999; --aus-bg: #f5f5f3;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'DM Sans',sans-serif;background:var(--light);color:var(--dark);font-size:14px;}
+
+    /* ── TOP BAR ── */
+    .topbar{background:var(--dark);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+    .topbar-left{display:flex;align-items:center;gap:12px;}
+    .logo{width:30px;height:30px;background:var(--rappi);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:600;}
+    .topbar-title{color:#fff;font-size:14px;font-weight:500;}
+    .topbar-sub{color:#666;font-size:12px;margin-left:4px;}
+    .topbar-right{display:flex;gap:8px;align-items:center;}
+    .btn{padding:6px 14px;border-radius:8px;border:1px solid #333;background:transparent;color:#fff;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+    .btn:hover{background:#1a1a1a;}
+    .btn-rappi{background:var(--rappi);border-color:var(--rappi);color:#fff;}
+    .btn-rappi:hover{background:#e03a14;}
+    .btn-rappi:disabled{background:#555;border-color:#555;cursor:not-allowed;}
+    .save-status{font-size:12px;color:#666;}
+    .save-status.ok{color:#4caf50;}
+    .save-status.err{color:#f44;}
+
+    /* ── FILTROS ── */
+    .filtros{background:var(--white);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+    .filtro-group{display:flex;align-items:center;gap:8px;}
+    .filtro-label{font-size:12px;color:var(--mid);font-weight:500;}
+    .rol-tabs{display:flex;gap:4px;}
+    .rol-tab{padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;font-size:12px;cursor:pointer;color:var(--mid);font-family:'DM Sans',sans-serif;transition:all .15s;}
+    .rol-tab.active{background:var(--dark);color:#fff;border-color:var(--dark);}
+    .semana-nav{display:flex;align-items:center;gap:8px;margin-left:auto;}
+    .nav-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border);background:var(--white);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mid);font-size:16px;}
+    .nav-btn:hover{background:var(--light);}
+    .semana-txt{font-size:13px;font-weight:500;color:var(--dark);white-space:nowrap;}
+    .hoy-btn{padding:4px 10px;border-radius:20px;border:1px solid var(--border);background:transparent;font-size:11px;cursor:pointer;color:var(--mid);}
+
+    /* ── LEYENDA ── */
+    .leyenda{padding:8px 24px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;background:var(--white);border-bottom:1px solid var(--border);}
+    .leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--mid);}
+    .leg-dot{width:10px;height:10px;border-radius:3px;}
+    .leg-tip{margin-left:auto;font-size:11px;color:var(--mid);}
+
+    /* ── TABLA ── */
+    .tabla-wrap{overflow-x:auto;padding:16px 24px;}
+    .tabla-inner{background:var(--white);border-radius:12px;border:1px solid var(--border);overflow:hidden;}
+    table{border-collapse:collapse;width:100%;}
+    thead th{padding:10px 8px;font-size:11px;font-weight:500;color:var(--mid);text-align:center;border-bottom:1px solid var(--border);background:var(--light);white-space:nowrap;}
+    thead th.th-nombre{text-align:left;padding-left:16px;min-width:200px;}
+    thead th.th-hoy{color:var(--rappi);}
+    .th-dia-num{font-size:14px;font-weight:600;display:block;color:var(--dark);}
+    .th-dia-num.hoy{color:var(--rappi);}
+    tbody tr{border-bottom:1px solid var(--border);}
+    tbody tr:last-child{border-bottom:none;}
+    tbody tr:hover{background:#fafaf8;}
+    .td-nombre{padding:10px 16px;white-space:nowrap;}
+    .td-nombre-main{font-size:13px;font-weight:500;}
+    .td-nombre-sub{font-size:11px;color:var(--mid);font-family:'DM Mono',monospace;}
+    .td-dia{padding:4px;min-width:88px;}
+
+    /* ── CELDA DE TURNO ── */
+    .celda{border-radius:8px;padding:5px 7px;cursor:pointer;min-height:42px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:1.5px solid transparent;transition:border-color .15s,transform .1s;user-select:none;}
+    .celda:hover{border-color:rgba(0,0,0,.15);transform:scale(1.02);}
+    .celda:active{transform:scale(.98);}
+    .celda.trabajo{background:var(--ok-bg);}
+    .celda.descanso{background:var(--de-bg);}
+    .celda.inc{background:var(--inc-bg);}
+    .celda.vac{background:var(--vac-bg);}
+    .celda.sin{background:var(--aus-bg);}
+    .celda.hoy-ring{border-color:var(--rappi) !important;}
+    .c-hora{font-size:11px;font-weight:500;font-family:'DM Mono',monospace;}
+    .celda.trabajo .c-hora{color:var(--ok);}
+    .celda.descanso .c-hora{color:var(--de);}
+    .celda.inc .c-hora{color:var(--inc);}
+    .celda.vac .c-hora{color:var(--vac);}
+    .celda.sin .c-hora{color:var(--aus);}
+    .c-punto{font-size:10px;color:var(--ok);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.8;}
+    .c-add{font-size:18px;color:#ccc;}
+
+    /* ── RESUMEN SEMANA ── */
+    .td-resumen{padding:4px 8px;text-align:center;}
+    .resumen-pill{background:var(--light);border-radius:20px;padding:3px 8px;font-size:11px;color:var(--mid);font-family:'DM Mono',monospace;white-space:nowrap;}
+
+    /* ── MODAL ── */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;}
+    .modal{background:var(--white);border-radius:16px;width:100%;max-width:400px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+    .modal-header{padding:18px 20px 14px;border-bottom:1px solid var(--border);}
+    .modal-header-top{display:flex;justify-content:space-between;align-items:flex-start;}
+    .modal-nombre{font-size:15px;font-weight:600;}
+    .modal-fecha{font-size:12px;color:var(--mid);margin-top:2px;}
+    .modal-close{width:28px;height:28px;border-radius:7px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--mid);}
+    .modal-body{padding:16px 20px;}
+    .tipo-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px;}
+    .tipo-btn{padding:9px 8px;border-radius:8px;border:1.5px solid var(--border);cursor:pointer;text-align:center;font-size:12px;font-weight:500;transition:all .15s;font-family:'DM Sans',sans-serif;color:var(--mid);}
+    .tipo-btn:hover{border-color:#999;}
+    .tipo-btn.sel-trabajo{border-color:var(--ok);background:var(--ok-bg);color:var(--ok);}
+    .tipo-btn.sel-descanso{border-color:var(--de);background:var(--de-bg);color:var(--de);}
+    .tipo-btn.sel-inc{border-color:var(--inc);background:var(--inc-bg);color:var(--inc);}
+    .tipo-btn.sel-vac{border-color:var(--vac);background:var(--vac-bg);color:var(--vac);}
+    .form-trabajo{display:none;}
+    .form-trabajo.visible{display:block;}
+    .form-row{margin-bottom:12px;}
+    .form-label{font-size:11px;font-weight:500;color:var(--mid);margin-bottom:4px;display:block;text-transform:uppercase;letter-spacing:.3px;}
+    .hora-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .form-input{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-family:'DM Mono',monospace;font-size:13px;color:var(--dark);outline:none;}
+    .form-input:focus{border-color:var(--rappi);}
+    .form-select{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--dark);outline:none;}
+    .form-select:focus{border-color:var(--rappi);}
+    .modal-footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;}
+    .modal-footer button{flex:1;}
+    .btn-modal-cancel{padding:9px;border-radius:8px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--dark);}
+    .btn-modal-ok{padding:9px;border-radius:8px;border:none;background:var(--rappi);color:#fff;cursor:pointer;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;}
+
+    /* ── TOAST ── */
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--dark);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:300;opacity:0;transition:opacity .3s;pointer-events:none;}
+    .toast.show{opacity:1;}
+
+    /* ── EMPTY ── */
+    .empty{padding:48px;text-align:center;color:var(--mid);font-size:13px;}
+
+    /* ── LOADING ── */
+    .loading-row td{padding:24px;text-align:center;color:var(--mid);font-size:13px;}
+  </style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo">R</div>
+    <span class="topbar-title">Editor de Horarios</span>
+    <span class="topbar-sub">Rappi Operaciones</span>
+  </div>
+  <div class="topbar-right">
+    <span class="save-status" id="save-status"></span>
+    <button class="btn btn-rappi" id="btn-guardar" onclick="guardarTodo()" disabled>Guardar cambios</button>
+  </div>
+</div>
+
+<!-- FILTROS -->
+<div class="filtros">
+  <div class="filtro-group">
+    <span class="filtro-label">Rol:</span>
+    <div class="rol-tabs">
+      <button class="rol-tab active" onclick="setRol('Brigadista')">Brigadista</button>
+      <button class="rol-tab" onclick="setRol('Agente')">Agente</button>
+      <button class="rol-tab" onclick="setRol('Supervisor')">Supervisor</button>
+    </div>
+  </div>
+  <div class="semana-nav">
+    <button class="hoy-btn" onclick="irHoy()">Hoy</button>
+    <button class="nav-btn" onclick="cambiarSemana(-1)">‹</button>
+    <span class="semana-txt" id="semana-txt">—</span>
+    <button class="nav-btn" onclick="cambiarSemana(1)">›</button>
+  </div>
+</div>
+
+<!-- LEYENDA -->
+<div class="leyenda">
+  <div class="leg"><div class="leg-dot" style="background:var(--ok-bg);border:1px solid var(--ok);"></div>Trabajo</div>
+  <div class="leg"><div class="leg-dot" style="background:var(--de-bg);border:1px solid var(--de);"></div>Descanso</div>
+  <div class="leg"><div class="leg-dot" style="background:var(--inc-bg);border:1px solid var(--inc);"></div>Incapacidad</div>
+  <div class="leg"><div class="leg-dot" style="background:var(--vac-bg);border:1px solid var(--vac);"></div>Vacaciones</div>
+  <div class="leg"><div class="leg-dot" style="background:var(--aus-bg);border:1px solid #ddd;"></div>Sin asignar</div>
+  <span class="leg-tip">Clic en cualquier celda para editar · Guardar cuando termines</span>
+</div>
+
+<!-- TABLA -->
+<div class="tabla-wrap">
+  <div class="tabla-inner">
+    <table>
+      <thead id="thead"></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" style="display:none;" onclick="if(event.target===this)cerrarModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-header-top">
+        <div>
+          <div class="modal-nombre" id="m-nombre">—</div>
+          <div class="modal-fecha" id="m-fecha">—</div>
+        </div>
+        <button class="modal-close" onclick="cerrarModal()">×</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="tipo-grid">
+        <button class="tipo-btn" id="tb-trabajo"   onclick="selTipo('trabajo')">Trabajo</button>
+        <button class="tipo-btn" id="tb-descanso"  onclick="selTipo('descanso')">Descanso</button>
+        <button class="tipo-btn" id="tb-inc"       onclick="selTipo('inc')">Incapacidad</button>
+        <button class="tipo-btn" id="tb-vac"       onclick="selTipo('vac')">Vacaciones</button>
+      </div>
+      <div class="form-trabajo" id="form-trabajo">
+        <div class="form-row">
+          <span class="form-label">Horario</span>
+          <div class="hora-row">
+            <div>
+              <span class="form-label">Entrada</span>
+              <input class="form-input" id="inp-entrada" type="time">
+            </div>
+            <div>
+              <span class="form-label">Salida</span>
+              <input class="form-input" id="inp-salida" type="time">
+            </div>
+          </div>
+        </div>
+        <div class="form-row" id="row-punto" style="display:none;">
+          <span class="form-label">Punto asignado</span>
+          <select class="form-select" id="inp-punto"></select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal-cancel" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn-modal-ok" onclick="aplicarCelda()">Aplicar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// CONFIGURACIÓN — edita estas 2 líneas
+// ══════════════════════════════════════════════════════════════
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyhfiHTeXuOntLqzeapmRy7M_-TuiZvAcDqdXo_EGpapBgjpPce1-Dq-ksjYHPACOMN4Q/exec";
+const SHEET_ID   = "11ZXfVvR9u1085RzOwg5JBO9YBIGiiufduGXtKRmv9Gw";
+// ══════════════════════════════════════════════════════════════
+
+const PUNTOS = [
+  "C.C CAFAM FLORESTA","C.C CENTRO MAYOR","C.C COLINA","C.C ECO PLAZA MOSQUERA",
+  "C.C FONTANAR CHIA","C.C GRAN PLAZA BOSA","C.C HAYUELOS","C.C SALITRE",
+  "C.C UNICENTRO","CC MERCURIO SOACHA","CC PALATINO","CC PASEO VILLA EL RIO",
+  "CC SANTAFE","City Parking Cra 12 # 93-43","EXITO COLINA","HUB 63",
+  "Jumbo - Santa Ana","LUGANO","Mc donalds 125","Muncher 61","SALVIO 93",
+  "WOK MUSEO NACIONAL","WOK PLAZA CENTRAL","WOK SALITRE","WOK TITAN",
+  "CC VIVA ENVIGADO - MEDELLIN","CC MOLINOS - MEDELLIN","HUB CALI","CC CHIPICHAPE - CALI"
+];
+
+const DIAS  = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+const MESES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+
+let rolActivo   = "Brigadista";
+let semOffset   = 0;
+let empleados   = [];
+let horarios    = {}; // {cedula: {fecha: {tipo,entrada,salida,punto}}}
+let cambios     = {}; // cambios pendientes de guardar
+let celdaActiva = null;
+let tipoActivo  = "trabajo";
+
+// ── UTILIDADES ────────────────────────────────────────────────
+function getSemana() {
+  const h = new Date();
+  const dow = h.getDay();
+  const lun = new Date(h);
+  lun.setDate(h.getDate() - (dow===0?6:dow-1) + semOffset*7);
+  lun.setHours(0,0,0,0);
+  return Array.from({length:7},(_,i)=>{ const d=new Date(lun); d.setDate(lun.getDate()+i); return d; });
+}
+
+function fmtFecha(d) {
+  return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
+}
+
+function esHoy(d) {
+  const h=new Date();
+  return d.getDate()===h.getDate()&&d.getMonth()===h.getMonth()&&d.getFullYear()===h.getFullYear();
+}
+
+function calcHoras(entrada,salida) {
+  if(!entrada||!salida) return 0;
+  const [hE,mE]=entrada.split(':').map(Number);
+  const [hS,mS]=salida.split(':').map(Number);
+  return Math.max(0,((hS*60+mS)-(hE*60+mE))/60);
+}
+
+function toast(msg,ok=true) {
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.className='toast show';
+  setTimeout(()=>el.className='toast',2500);
+}
+
+// ── CARGA DE DATOS ────────────────────────────────────────────
+async function cargarEmpleados() {
+  try {
+    const r = await fetch(`${SCRIPT_URL}?action=getConfig&sheetId=${SHEET_ID}`);
+    const d = await r.json();
+    if(d.ok) {
+      empleados = d.empleados;
+      horarios  = d.horarios || {};
+    }
+  } catch(e) {
+    // Datos de muestra para preview
+    empleados = [
+      {nombre:"ANDERSON ROA",         cedula:"1020777056", tipo:"Directo",   modalidad:"Terreno", rol:"Brigadista"},
+      {nombre:"ANGGY CHACON MORALES", cedula:"1018517750", tipo:"Directo",   modalidad:"Terreno", rol:"Brigadista"},
+      {nombre:"CRISTHIAN CRUZ",       cedula:"80865371",   tipo:"Directo",   modalidad:"Terreno", rol:"Brigadista"},
+      {nombre:"HOLGER CAMPO VITAL",   cedula:"1100627077", tipo:"Directo",   modalidad:"Terreno", rol:"Brigadista"},
+      {nombre:"JUDY MARIN ARBELAEZ",  cedula:"1032452831", tipo:"Directo",   modalidad:"Terreno", rol:"Brigadista"},
+      {nombre:"LEIDY MARTINEZ",       cedula:"1097039893", tipo:"Directo",   modalidad:"Terreno", rol:"Brigadista"},
+      {nombre:"MARTHA ZAPATA",        cedula:"1018436721", tipo:"Directo",   modalidad:"Terreno", rol:"Brigadista"},
+      {nombre:"ANGYE ACOSTA",         cedula:"1067952228", tipo:"Directo",   modalidad:"Remoto",  rol:"Agente"},
+      {nombre:"BREINER SILVERA",      cedula:"1002235983", tipo:"Directo",   modalidad:"Remoto",  rol:"Agente"},
+      {nombre:"SERGIO RAMIREZ",       cedula:"1070925641", tipo:"Directo",   modalidad:"Remoto",  rol:"Supervisor"},
+    ];
+    // Ejemplo de horarios pre-cargados
+    horarios["1020777056"] = {
+      [fmtFecha(getSemana()[0])]: {tipo:"trabajo",entrada:"12:00",salida:"19:00",punto:"CC SANTAFE"},
+      [fmtFecha(getSemana()[1])]: {tipo:"descanso"},
+      [fmtFecha(getSemana()[2])]: {tipo:"trabajo",entrada:"10:00",salida:"18:00",punto:"C.C COLINA"},
+    };
+  }
+  renderTabla();
+}
+
+// ── RENDER ────────────────────────────────────────────────────
+function renderTabla() {
+  const semana  = getSemana();
+  const emp     = empleados.filter(e => e.rol === rolActivo && e.activo !== "NO");
+
+  // Semana label
+  const s0=semana[0], s6=semana[6];
+  document.getElementById('semana-txt').textContent =
+    DIAS[1]+" "+s0.getDate()+" "+MESES[s0.getMonth()]+" — "+
+    DIAS[0]+" "+s6.getDate()+" "+MESES[s6.getMonth()]+" "+s6.getFullYear();
+
+  // Thead
+  let th = `<tr><th class="th-nombre">Colaborador</th>`;
+  semana.forEach(d => {
+    const hoy = esHoy(d);
+    th += `<th class="${hoy?'th-hoy':''}">
+      <span class="th-dia-num ${hoy?'hoy':''}">${d.getDate()}</span>
+      ${DIAS[d.getDay()]} ${MESES[d.getMonth()]}
+    </th>`;
+  });
+  th += `<th style="min-width:70px;">Semana</th></tr>`;
+  document.getElementById('thead').innerHTML = th;
+
+  // Tbody
+  if(emp.length===0){
+    document.getElementById('tbody').innerHTML =
+      `<tr><td colspan="${semana.length+2}" class="empty">No hay colaboradores activos con rol ${rolActivo}.</td></tr>`;
+    return;
+  }
+
+  let tb = "";
+  emp.forEach(e => {
+    const esCed = e.cedula;
+    let totalH = 0, diasT = 0;
+    tb += `<tr>
+      <td class="td-nombre">
+        <div class="td-nombre-main">${e.nombre}</div>
+        <div class="td-nombre-sub">${e.cedula} · ${e.modalidad}</div>
+      </td>`;
+    semana.forEach(d => {
+      const fecha = fmtFecha(d);
+      const dia   = (horarios[esCed]||{})[fecha] || {tipo:'sin'};
+      const hoy   = esHoy(d);
+      const cls   = dia.tipo||'sin';
+      let inner   = '';
+      if(cls==='trabajo'){
+        inner = `<div class="c-hora">${dia.entrada||''}–${dia.salida||''}</div>`;
+        if(rolActivo==='Brigadista' && dia.punto)
+          inner += `<div class="c-punto">${dia.punto}</div>`;
+        totalH += calcHoras(dia.entrada,dia.salida);
+        diasT++;
+      } else if(cls==='descanso'){
+        inner = `<div class="c-hora">DE</div>`;
+      } else if(cls==='inc'){
+        inner = `<div class="c-hora">INC</div>`;
+      } else if(cls==='vac'){
+        inner = `<div class="c-hora">VAC</div>`;
+      } else {
+        inner = `<div class="c-add">+</div>`;
+      }
+      tb += `<td class="td-dia">
+        <div class="celda ${cls} ${hoy?'hoy-ring':''}"
+             onclick="abrirModal('${esCed}','${e.nombre}','${fecha}','${d.getDate()}/${d.getMonth()+1}')">
+          ${inner}
+        </div>
+      </td>`;
+    });
+    const resumen = diasT>0 ? `${diasT}d · ${Math.round(totalH)}h` : '—';
+    tb += `<td class="td-resumen"><span class="resumen-pill">${resumen}</span></td></tr>`;
+  });
+  document.getElementById('tbody').innerHTML = tb;
+}
+
+// ── MODAL ─────────────────────────────────────────────────────
+function abrirModal(cedula, nombre, fecha, fechaCorta) {
+  celdaActiva = {cedula, fecha};
+  document.getElementById('m-nombre').textContent = nombre;
+  document.getElementById('m-fecha').textContent  = fechaCorta;
+
+  // Llenar select de puntos
+  const sel = document.getElementById('inp-punto');
+  sel.innerHTML = PUNTOS.map(p=>`<option value="${p}">${p}</option>`).join('');
+
+  // Estado actual
+  const dia = (horarios[cedula]||{})[fecha] || {tipo:'sin'};
+  const tipo = dia.tipo==='sin' ? 'trabajo' : dia.tipo;
+  selTipo(tipo);
+
+  if(tipo==='trabajo'){
+    document.getElementById('inp-entrada').value = dia.entrada||'07:00';
+    document.getElementById('inp-salida').value  = dia.salida||'16:00';
+    if(dia.punto) document.getElementById('inp-punto').value = dia.punto;
+  }
+
+  // Mostrar/ocultar punto según rol
+  document.getElementById('row-punto').style.display = rolActivo==='Brigadista' ? 'block' : 'none';
+  document.getElementById('modal').style.display = 'flex';
+}
+
+function cerrarModal() {
+  document.getElementById('modal').style.display = 'none';
+  celdaActiva = null;
+}
+
+function selTipo(t) {
+  tipoActivo = t;
+  ['trabajo','descanso','inc','vac'].forEach(x => {
+    const btn = document.getElementById('tb-'+x);
+    btn.className = 'tipo-btn';
+    if(x===t) btn.classList.add('sel-'+t);
+  });
+  document.getElementById('form-trabajo').className =
+    'form-trabajo' + (t==='trabajo'?' visible':'');
+}
+
+function aplicarCelda() {
+  if(!celdaActiva) return;
+  const {cedula,fecha} = celdaActiva;
+  if(!horarios[cedula]) horarios[cedula]={};
+  if(!cambios[cedula])  cambios[cedula]={};
+
+  let dia = {tipo: tipoActivo};
+  if(tipoActivo==='trabajo'){
+    const entrada = document.getElementById('inp-entrada').value;
+    const salida  = document.getElementById('inp-salida').value;
+    if(!entrada||!salida){ toast("Ingresa hora de entrada y salida",false); return; }
+    if(entrada>=salida){ toast("La salida debe ser después de la entrada",false); return; }
+    dia.entrada = entrada;
+    dia.salida  = salida;
+    if(rolActivo==='Brigadista') dia.punto = document.getElementById('inp-punto').value;
+  }
+
+  horarios[cedula][fecha] = dia;
+  cambios[cedula][fecha]  = dia;
+
+  // Activar botón guardar
+  document.getElementById('btn-guardar').disabled = false;
+  document.getElementById('save-status').textContent = 'Cambios sin guardar';
+  document.getElementById('save-status').className  = 'save-status';
+
+  cerrarModal();
+  renderTabla();
+}
+
+// ── GUARDAR EN SHEET ──────────────────────────────────────────
+async function guardarTodo() {
+  if(Object.keys(cambios).length===0) return;
+  const btn = document.getElementById('btn-guardar');
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+  document.getElementById('save-status').textContent = 'Guardando...';
+
+  try {
+    const payload = JSON.stringify({
+      action: 'saveHorarios',
+      sheetId: SHEET_ID,
+      rol: rolActivo,
+      cambios: cambios
+    });
+    await fetch(SCRIPT_URL, {
+      method:'POST', body: payload
+    });
+    cambios = {};
+    document.getElementById('save-status').textContent = '✓ Guardado';
+    document.getElementById('save-status').className  = 'save-status ok';
+    btn.textContent = 'Guardar cambios';
+    toast('Horario guardado correctamente');
+  } catch(e) {
+    document.getElementById('save-status').textContent = 'Error al guardar';
+    document.getElementById('save-status').className  = 'save-status err';
+    btn.disabled = false;
+    btn.textContent = 'Guardar cambios';
+    toast('Error de conexión — intenta de nuevo',false);
+  }
+}
+
+// ── NAVEGACIÓN ────────────────────────────────────────────────
+function setRol(r) {
+  rolActivo = r;
+  document.querySelectorAll('.rol-tab').forEach(t=>{
+    t.classList.toggle('active', t.textContent===r);
+  });
+  renderTabla();
+}
+
+function cambiarSemana(d) { semOffset+=d; renderTabla(); }
+function irHoy()          { semOffset=0;  renderTabla(); }
+
+// Alerta si hay cambios sin guardar
+window.onbeforeunload = () => Object.keys(cambios).length>0 ? true : undefined;
+
+// Iniciar
+cargarEmpleados();
+</script>
+</body>
+</html>
