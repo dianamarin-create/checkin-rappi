@@ -209,6 +209,7 @@ const PUNTOS = {
   // Abre maps.google.com, busca el lugar, clic derecho → copiar coordenadas
   "C.C CAFAM FLORESTA":          { lat: 4.687087,  lon: -74.073431, r: 150 },
   "Pruebas":                     { lat: 4.5718,  lon: -74.1449, r: 200 },
+  "Centro Cartagena":            { lat: 10.3997,  lon: -75.5144,  r: 999999 },
   "HUB CALI": { lat: 3.468583, lon: -76.529113, r: 100 },
   "CC CHIPICHAPE - CALI": { lat: 3.475073, lon: -76.527851, r: 150 },
   "CC VIVA ENVIGADO - MEDELLIN": { lat: 6.176464, lon: -75.590931, r: 150 },
@@ -311,7 +312,8 @@ const PUNTOS_TERRENO = {
   ],
   "Medellín": ["CC VIVA ENVIGADO - MEDELLIN","CC MOLINOS - MEDELLIN"],
   "Cali":     ["HUB CALI","CC CHIPICHAPE - CALI"],
-  "Barranquilla": []
+  "Barranquilla": [],
+  "Cartagena":    ["Centro Cartagena"]
 };
 
 const ROLES_POR_MODALIDAD = {
@@ -348,7 +350,7 @@ function actualizarOpciones() {
 
   // Ciudad siempre visible
   ciudadWrap.style.display = "block";
-  verificarBoton();
+  actualizarPuntos(); // reconstruir ciudad y puntos según modalidad+rol
 }
 
 function actualizarRol() {
@@ -359,18 +361,42 @@ function actualizarRol() {
 function actualizarPuntos() {
   const modalidad = document.getElementById("modalidad").value;
   const rol       = document.getElementById("rol").value;
-  const ciudad    = document.getElementById("ciudad").value;
+  const ciudadSel = document.getElementById("ciudad");
+  const ciudadVal = ciudadSel ? ciudadSel.value : "";
   const puntoWrap = document.getElementById("punto-wrap");
   const puntoSel  = document.getElementById("punto");
   const fotoSec   = document.getElementById("foto-section");
 
-  // Limpiar puntos
+  // ── Actualizar opciones de ciudad según rol ──────────────
+  if(ciudadSel){
+    const ciudadesBase = ["Bogotá","Medellín","Cali","Barranquilla"];
+    const conCartagena = modalidad === "Terreno" && rol === "Brigadista";
+    const ciudadesDisp = conCartagena ? [...ciudadesBase, "Cartagena"] : ciudadesBase;
+
+    // Reconstruir opciones de ciudad manteniendo selección si sigue válida
+    const selActual = ciudadSel.value;
+    ciudadSel.innerHTML = '<option value="">— Selecciona ciudad —</option>';
+    ciudadesDisp.forEach(c => {
+      const o = document.createElement("option");
+      o.value = c; o.textContent = c;
+      if(c === selActual) o.selected = true;
+      ciudadSel.appendChild(o);
+    });
+    // Si la ciudad seleccionada ya no está disponible, limpiar
+    if(selActual && !ciudadesDisp.includes(selActual)){
+      ciudadSel.value = "";
+    }
+  }
+
+  const ciudadFinal = ciudadSel ? ciudadSel.value : "";
+
+  // ── Limpiar y mostrar puntos ─────────────────────────────
   puntoSel.innerHTML = '<option value="">— Selecciona tu punto —</option>';
   puntoWrap.style.display = "none";
 
-  // Mostrar puntos SOLO para Terreno + Brigadista + ciudad seleccionada
-  if(modalidad === "Terreno" && rol === "Brigadista" && ciudad){
-    const lista = PUNTOS_TERRENO[ciudad] || [];
+  // Puntos solo para Terreno Brigadista con ciudad seleccionada
+  if(modalidad === "Terreno" && rol === "Brigadista" && ciudadFinal){
+    const lista = PUNTOS_TERRENO[ciudadFinal] || [];
     if(lista.length > 0){
       lista.forEach(nombre => {
         const o = document.createElement("option");
@@ -381,7 +407,7 @@ function actualizarPuntos() {
     }
   }
 
-  // Foto: ocultar para Remoto Agente/Supervisor
+  // ── Foto ─────────────────────────────────────────────────
   const sinFoto = (modalidad === "Remoto") && (rol === "Agente" || rol === "Supervisor");
   if(fotoSec) fotoSec.style.display = sinFoto ? "none" : "block";
 
