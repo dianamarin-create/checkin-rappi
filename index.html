@@ -266,6 +266,9 @@
 <script>
 
 
+
+
+
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx5Yr3K0KuRJwAIYGyXdSR0gqpcge1qWN6aD-v-VQfAhvKhl5YyiF6KH9FZV7cLbNZY/exec";
 
 
@@ -819,7 +822,7 @@ function getSemanaActual() {
   var lun=new Date(h);
   lun.setDate(h.getDate()-(dow===0?6:dow-1));
   lun.setHours(0,0,0,0);
-  return Array.from({length:7},function(_,i){var d=new Date(lun);d.setDate(lun.getDate()+i);return d;});
+  return Array.from({length:14},function(_,i){var d=new Date(lun);d.setDate(lun.getDate()+i);return d;});
 }
 function fmtF(d){return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();}
 function esHoyH(d){var h=new Date();return d.getDate()===h.getDate()&&d.getMonth()===h.getMonth()&&d.getFullYear()===h.getFullYear();}
@@ -836,11 +839,11 @@ function buscarHorario() {
 
 async function fetchHorario(cedula) {
   var semana=getSemanaActual();
-  var ini=fmtF(semana[0]), fin=fmtF(semana[6]);
+  var ini=fmtF(semana[0]), fin=fmtF(semana[13]);
   var res=document.getElementById('h-resultado');
   res.innerHTML='<div style="text-align:center;padding:24px;color:#888;font-size:13px;">Cargando...</div>';
   try {
-    var r=await fetch(H_URL+'?action=getHorarioColaborador&cedula='+cedula+'&fechaIni='+ini+'&fechaFin='+fin);
+    var r=await fetch(H_URL+'?action=getHorarioColaborador&cedula='+cedula+'&fechaIni='+fmtF(semana[0])+'&fechaFin='+fmtF(semana[13]));
     var d=await r.json();
     if(!d.ok||!d.horario||d.horario.length===0){
       res.innerHTML=''; document.getElementById('h-error').style.display='block'; return;
@@ -856,13 +859,20 @@ async function fetchHorario(cedula) {
       } else if(dia.tipo==='descanso') descansos++;
     });
     var out='<div class="h-card">'
-      +'<div style="font-size:12px;color:#888;margin-bottom:10px;">Semana '+fmtF(semana[0])+' — '+fmtF(semana[6])+'</div>'
+      +'<div style="font-size:12px;color:#888;margin-bottom:10px;">Semana actual + siguiente: '+fmtF(semana[0])+' — '+fmtF(semana[13])+'</div>'
       +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">'
       +'<div style="background:#f5f5f3;border-radius:8px;padding:8px;text-align:center;"><div style="font-size:20px;font-weight:700;">'+diasT+'</div><div style="font-size:11px;color:#888;">Días trabajo</div></div>'
       +'<div style="background:#f5f5f3;border-radius:8px;padding:8px;text-align:center;"><div style="font-size:20px;font-weight:700;">'+Math.round(totalMin/60)+'h</div><div style="font-size:11px;color:#888;">Horas</div></div>'
       +'<div style="background:#f5f5f3;border-radius:8px;padding:8px;text-align:center;"><div style="font-size:20px;font-weight:700;">'+descansos+'</div><div style="font-size:11px;color:#888;">Descansos</div></div>'
       +'</div></div>';
     d.horario.forEach(function(dia,i){
+      if(i===7){
+        out+='<div style="display:flex;align-items:center;gap:8px;margin:12px 0 8px;">'
+           +'<div style="flex:1;height:1px;background:#e0e0e0;"></div>'
+           +'<span style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:.4px;">SEMANA SIGUIENTE</span>'
+           +'<div style="flex:1;height:1px;background:#e0e0e0;"></div>'
+           +'</div>';
+      }
       var fecha=semana[i], esH=esHoyH(fecha), tipo=dia.tipo||'sin';
       var clrMap={'trabajo':'#0f6e56','descanso':'#854f0b','inc':'#185fa5','vac':'#6a1b9a','sin':'#888'};
       var lblMap={'trabajo':'Trabajo','descanso':'Descanso','inc':'Incapacidad','vac':'Vacaciones','sin':'Sin asignar'};
@@ -898,7 +908,7 @@ function getSemanaActual() {
   var lun=new Date(h);
   lun.setDate(h.getDate()-(dow===0?6:dow-1));
   lun.setHours(0,0,0,0);
-  return Array.from({length:7},function(_,i){var d=new Date(lun);d.setDate(lun.getDate()+i);return d;});
+  return Array.from({length:14},function(_,i){var d=new Date(lun);d.setDate(lun.getDate()+i);return d;});
 }
 function fmtF(d){return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();}
 function esHoyH(d){var h=new Date();return d.getDate()===h.getDate()&&d.getMonth()===h.getMonth()&&d.getFullYear()===h.getFullYear();}
@@ -916,6 +926,9 @@ var MESES_N=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","
 function getSemanaActual(){var h=new Date(),dow=h.getDay(),lun=new Date(h);lun.setDate(h.getDate()-(dow===0?6:dow-1));lun.setHours(0,0,0,0);return Array.from({length:7},function(_,i){var d=new Date(lun);d.setDate(lun.getDate()+i);return d;});}
 function fmtF(d){return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();}
 function esHoyH(d){var h=new Date();return d.getDate()===h.getDate()&&d.getMonth()===h.getMonth()&&d.getFullYear()===h.getFullYear();}
+
+
+
 
 
 
