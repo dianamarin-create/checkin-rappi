@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Check-in Rappi</title>
   <style>
+
     *{box-sizing:border-box;margin:0;padding:0;}
     body{font-family:sans-serif;background:#f4f4f4;min-height:100vh;
          display:flex;align-items:flex-start;justify-content:center;padding:16px;}
@@ -45,14 +46,39 @@
       animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px;}
     @keyframes spin{to{transform:rotate(360deg);}}
     .req{color:#ff441b;}
-    #turno-inicio, #turno-fin{margin-bottom:0;}
     .dato-row{display:flex;justify-content:space-between;align-items:center;
       padding:7px 0;border-bottom:0.5px solid #eee;font-size:13px;}
     .dato-row .lbl{color:#888;font-size:12px;}
     .dato-row .val{font-weight:600;color:#111;text-align:right;max-width:60%;}
+  
+    body{padding-bottom:74px;}
+    .navbar{position:fixed;bottom:0;left:0;right:0;background:#fff;
+      border-top:1px solid #eee;box-shadow:0 -2px 10px rgba(0,0,0,.07);
+      display:flex;z-index:200;}
+    .nav-btn{flex:1;padding:10px 8px 8px;border:none;background:transparent;
+      cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;
+      border-top:3px solid transparent;transition:all .2s;font-family:sans-serif;}
+    .nav-btn.active{border-top-color:#ff441b;}
+    #panel-horario{display:none;padding:16px;max-width:420px;margin:0 auto;}
+    .h-card{background:#fff;border-radius:16px;padding:18px;
+      box-shadow:0 2px 12px rgba(0,0,0,.08);margin-bottom:12px;}
+    .h-input{width:100%;padding:12px 14px;border:1.5px solid #eee;border-radius:10px;
+      font-size:16px;outline:none;font-family:sans-serif;box-sizing:border-box;transition:border-color .2s;}
+    .h-input:focus{border-color:#ff441b;}
+    .h-dia{border-radius:14px;padding:14px;margin-bottom:8px;}
+    .h-dia.trabajo{background:#e8f7ef;border:1px solid #b2dfcc;}
+    .h-dia.descanso{background:#fef6e7;border:1px solid #f5d99a;}
+    .h-dia.inc{background:#e7f2fe;border:1px solid #b3d4f5;}
+    .h-dia.vac{background:#f3e5f5;border:1px solid #ce93d8;}
+    .h-dia.sin{background:#f5f5f3;border:1px solid #e0e0e0;}
+    .h-dia.hoy-ring{outline:2px solid #ff441b;outline-offset:2px;}
+    #turno-inicio, #turno-fin{margin-bottom:0;}
   </style>
 </head>
 <body>
+
+<!-- ══ PANEL CHECK-IN ══════════════════════════════════ -->
+<div id="panel-checkin">
 <div class="card">
   <div class="logo"><span style="color:#ff441b;">R</span>appi</div>
   <p class="sub">Registro de asistencia — Operaciones</p>
@@ -65,7 +91,7 @@
     <option value="Remoto">Remoto</option>
   </select>
 
-  <!-- Rol (aparece tras seleccionar modalidad) -->
+  <!-- Rol -->
   <div id="rol-wrap" style="display:none;">
     <label>Rol <span class="req">*</span></label>
     <select id="rol" onchange="actualizarPuntos()">
@@ -73,7 +99,7 @@
     </select>
   </div>
 
-  <!-- Ciudad (solo Remoto) -->
+  <!-- Ciudad -->
   <div id="ciudad-wrap" style="display:none;">
     <label>Ciudad <span class="req">*</span></label>
     <select id="ciudad" onchange="actualizarPuntos()">
@@ -85,7 +111,7 @@
     </select>
   </div>
 
-  <!-- Punto (solo Terreno) -->
+  <!-- Punto (solo Terreno Brigadista) -->
   <div id="punto-wrap" style="display:none;">
     <label>Punto de trabajo <span class="req">*</span></label>
     <select id="punto" onchange="actualizarGPS();verificarBoton()">
@@ -130,12 +156,9 @@
       </select>
     </div>
   </div>
-  <!-- Resumen del turno -->
   <div id="turno-resumen" style="display:none;background:#f0f4ff;border:1px solid #c7d7f5;
     border-radius:10px;padding:9px 14px;font-size:13px;color:#1a3a7a;
-    margin-bottom:14px;text-align:center;font-weight:600;">
-  </div>
-  <!-- Campo oculto que guarda el turno formateado -->
+    margin-bottom:14px;text-align:center;font-weight:600;"></div>
   <input type="hidden" id="turno" value="">
 
   <label>Tipo de registro <span class="req">*</span></label>
@@ -161,6 +184,26 @@
   </div>
 
   <button class="primary" id="btn" disabled>Registrar turno</button>
+</div>
+</div>
+
+<!-- ══ PANEL MI HORARIO ════════════════════════════════ -->
+<div id="panel-horario">
+  <div class="h-card">
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:14px;">
+      <span style="color:#ff441b;font-size:22px;font-weight:800;line-height:1;">R</span>
+      <span style="font-size:15px;font-weight:600;color:#111;">appi</span>
+      <span style="font-size:12px;color:#aaa;margin-left:4px;">Mi horario semanal</span>
+    </div>
+    <div style="font-size:12px;color:#888;font-weight:500;margin-bottom:8px;">Ingresa tu número de cédula</div>
+    <input class="h-input" type="number" id="ced-horario" inputmode="numeric"
+      placeholder="Ej: 1020777056" oninput="buscarHorario()">
+    <div id="h-error" style="font-size:12px;color:#c62828;margin-top:8px;display:none;">
+      Cédula no encontrada. Verifica el número.
+    </div>
+  </div>
+  <div id="h-resultado"></div>
+  <div style="height:20px;"></div>
 </div>
 
 <!-- Modal de confirmación -->
@@ -200,9 +243,37 @@
   </div>
 </div>
 
+
+
+<!-- ══ NAVBAR ══════════════════════════════════════════ -->
+<nav class="navbar">
+  <button class="nav-btn active" id="nb-checkin" onclick="setTab('checkin')">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ff441b" stroke-width="2">
+      <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+    </svg>
+    <span style="font-size:11px;font-weight:600;color:#ff441b;">Check-in</span>
+  </button>
+  <button class="nav-btn" id="nb-horario" onclick="setTab('horario')">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2">
+      <rect x="3" y="4" width="18" height="18" rx="2"/>
+      <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+      <line x1="3" y1="10" x2="21" y2="10"/>
+    </svg>
+    <span style="font-size:11px;font-weight:600;color:#aaa;">Mi horario</span>
+  </button>
+</nav>
+
 <script>
+
+
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx5Yr3K0KuRJwAIYGyXdSR0gqpcge1qWN6aD-v-VQfAhvKhl5YyiF6KH9FZV7cLbNZY/exec";
+
+
+
+
+
 // ══ CONFIGURACIÓN ══════════════════════════════════════════
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx5Yr3K0KuRJwAIYGyXdSR0gqpcge1qWN6aD-v-VQfAhvKhl5YyiF6KH9FZV7cLbNZY/exec"; // ← tu URL
+; // ← tu URL
 
 const PUNTOS = {
   // ⚠ Verifica cada coordenada en Google Maps antes de usar en producción
@@ -643,6 +714,8 @@ function actualizarResumenTurno() {
   verificarBoton();
 }
 
+
+
 function mostrarModal(valido, punto, id, nombre, turno, dist) {
   const overlay = document.getElementById("modal-overlay");
   overlay.style.display = "flex";
@@ -726,6 +799,127 @@ function cerrarModal() {
   document.getElementById("gps-box").className = "gps-box gps-wait";
   document.getElementById("gps-txt").textContent = "Selecciona tu punto para ver la distancia";
 }
+
+// ══ PESTAÑAS ════════════════════════════════════════════
+function setTab(tab) {
+  document.getElementById('panel-checkin').style.display = tab==='checkin' ? 'block' : 'none';
+  document.getElementById('panel-horario').style.display = tab==='horario' ? 'block' : 'none';
+  document.getElementById('nb-checkin').className = 'nav-btn' + (tab==='checkin' ? ' active' : '');
+  document.getElementById('nb-horario').className = 'nav-btn' + (tab==='horario' ? ' active' : '');
+  if(tab==='horario') setTimeout(function(){document.getElementById('ced-horario').focus();}, 150);
+}
+
+// ══ HORARIO POR CÉDULA ══════════════════════════════════
+var H_URL   = "https://script.google.com/macros/s/AKfycbyhfiHTeXuOntLqzeapmRy7M_-TuiZvAcDqdXo_EGpapBgjpPce1-Dq-ksjYHPACOMN4Q/exec";
+var DIAS_N  = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+var MESES_N = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+
+function getSemanaActual() {
+  var h=new Date(), dow=h.getDay();
+  var lun=new Date(h);
+  lun.setDate(h.getDate()-(dow===0?6:dow-1));
+  lun.setHours(0,0,0,0);
+  return Array.from({length:7},function(_,i){var d=new Date(lun);d.setDate(lun.getDate()+i);return d;});
+}
+function fmtF(d){return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();}
+function esHoyH(d){var h=new Date();return d.getDate()===h.getDate()&&d.getMonth()===h.getMonth()&&d.getFullYear()===h.getFullYear();}
+
+var hTimer=null;
+function buscarHorario() {
+  clearTimeout(hTimer);
+  var ced=document.getElementById('ced-horario').value.trim();
+  document.getElementById('h-error').style.display='none';
+  document.getElementById('h-resultado').innerHTML='';
+  if(ced.length<6) return;
+  hTimer=setTimeout(function(){fetchHorario(ced);},600);
+}
+
+async function fetchHorario(cedula) {
+  var semana=getSemanaActual();
+  var ini=fmtF(semana[0]), fin=fmtF(semana[6]);
+  var res=document.getElementById('h-resultado');
+  res.innerHTML='<div style="text-align:center;padding:24px;color:#888;font-size:13px;">Cargando...</div>';
+  try {
+    var r=await fetch(H_URL+'?action=getHorarioColaborador&cedula='+cedula+'&fechaIni='+ini+'&fechaFin='+fin);
+    var d=await r.json();
+    if(!d.ok||!d.horario||d.horario.length===0){
+      res.innerHTML=''; document.getElementById('h-error').style.display='block'; return;
+    }
+    var diasT=0,totalMin=0,descansos=0;
+    d.horario.forEach(function(dia){
+      if(dia.tipo==='trabajo'){
+        diasT++;
+        if(dia.entrada&&dia.salida){
+          var p1=dia.entrada.split(':'),p2=dia.salida.split(':');
+          totalMin+=(parseInt(p2[0])*60+parseInt(p2[1]))-(parseInt(p1[0])*60+parseInt(p1[1]));
+        }
+      } else if(dia.tipo==='descanso') descansos++;
+    });
+    var out='<div class="h-card">'
+      +'<div style="font-size:12px;color:#888;margin-bottom:10px;">Semana '+fmtF(semana[0])+' — '+fmtF(semana[6])+'</div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">'
+      +'<div style="background:#f5f5f3;border-radius:8px;padding:8px;text-align:center;"><div style="font-size:20px;font-weight:700;">'+diasT+'</div><div style="font-size:11px;color:#888;">Días trabajo</div></div>'
+      +'<div style="background:#f5f5f3;border-radius:8px;padding:8px;text-align:center;"><div style="font-size:20px;font-weight:700;">'+Math.round(totalMin/60)+'h</div><div style="font-size:11px;color:#888;">Horas</div></div>'
+      +'<div style="background:#f5f5f3;border-radius:8px;padding:8px;text-align:center;"><div style="font-size:20px;font-weight:700;">'+descansos+'</div><div style="font-size:11px;color:#888;">Descansos</div></div>'
+      +'</div></div>';
+    d.horario.forEach(function(dia,i){
+      var fecha=semana[i], esH=esHoyH(fecha), tipo=dia.tipo||'sin';
+      var clrMap={'trabajo':'#0f6e56','descanso':'#854f0b','inc':'#185fa5','vac':'#6a1b9a','sin':'#888'};
+      var lblMap={'trabajo':'Trabajo','descanso':'Descanso','inc':'Incapacidad','vac':'Vacaciones','sin':'Sin asignar'};
+      var bgMap={'trabajo':'#0f6e56','descanso':'#854f0b','inc':'#185fa5','vac':'#6a1b9a','sin':'#ccc'};
+      var clr=clrMap[tipo]||'#888', lbl=lblMap[tipo]||'', bg=bgMap[tipo]||'#ccc';
+      var numClr=esH?'#ff441b':clr, dowClr=esH?'#ff441b':'#666';
+      var detalle='';
+      if(tipo==='trabajo') detalle='<div style="font-size:16px;font-weight:700;font-family:monospace;color:'+clr+';margin-top:6px;">'+(dia.entrada||'')+' → '+(dia.salida||'')+'</div>'+(dia.punto?'<div style="font-size:11px;color:'+clr+';opacity:.8;margin-top:2px;">📍 '+dia.punto+'</div>':'');
+      else if(tipo!=='sin') detalle='<div style="font-size:13px;color:'+clr+';margin-top:6px;">'+lbl+'</div>';
+      out+='<div class="h-dia '+tipo+(esH?' hoy-ring':'')+'"><div style="display:flex;align-items:center;justify-content:space-between;">'
+          +'<div style="display:flex;align-items:center;gap:12px;"><div style="text-align:center;min-width:34px;">'
+          +'<div style="font-size:22px;font-weight:700;color:'+numClr+';line-height:1;">'+fecha.getDate()+'</div>'
+          +'<div style="font-size:10px;color:#888;text-transform:uppercase;">'+MESES_N[fecha.getMonth()]+'</div></div>'
+          +'<div style="font-size:11px;font-weight:600;color:'+dowClr+';text-transform:uppercase;">'+DIAS_N[fecha.getDay()]+(esH?' · HOY':'')+'</div></div>'
+          +'<span style="background:'+bg+';color:#fff;font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;">'+lbl+'</span>'
+          +'</div>'+detalle+'</div>';
+    });
+    res.innerHTML=out;
+  } catch(e) {
+    res.innerHTML='<div style="text-align:center;padding:20px;color:#c62828;font-size:13px;">Error al cargar. Verifica tu conexión.</div>';
+  }
+}
+
+
+
+
+// ══ HORARIO POR CÉDULA ══════════════════════════════════
+var DIAS_N  = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+var MESES_N = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+
+function getSemanaActual() {
+  var h=new Date(), dow=h.getDay();
+  var lun=new Date(h);
+  lun.setDate(h.getDate()-(dow===0?6:dow-1));
+  lun.setHours(0,0,0,0);
+  return Array.from({length:7},function(_,i){var d=new Date(lun);d.setDate(lun.getDate()+i);return d;});
+}
+function fmtF(d){return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();}
+function esHoyH(d){var h=new Date();return d.getDate()===h.getDate()&&d.getMonth()===h.getMonth()&&d.getFullYear()===h.getFullYear();}
+
+
+
+
+
+
+
+
+// ══ HORARIO POR CÉDULA ══════════════════════════════════
+var DIAS_N=["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+var MESES_N=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+function getSemanaActual(){var h=new Date(),dow=h.getDay(),lun=new Date(h);lun.setDate(h.getDate()-(dow===0?6:dow-1));lun.setHours(0,0,0,0);return Array.from({length:7},function(_,i){var d=new Date(lun);d.setDate(lun.getDate()+i);return d;});}
+function fmtF(d){return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();}
+function esHoyH(d){var h=new Date();return d.getDate()===h.getDate()&&d.getMonth()===h.getMonth()&&d.getFullYear()===h.getFullYear();}
+
+
+
+
 </script>
 </body>
 </html>
