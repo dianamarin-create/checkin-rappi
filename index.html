@@ -196,8 +196,15 @@
       <span style="font-size:12px;color:#aaa;margin-left:4px;">Mi horario semanal</span>
     </div>
     <div style="font-size:12px;color:#888;font-weight:500;margin-bottom:8px;">Ingresa tu número de cédula</div>
-    <input class="h-input" type="number" id="ced-horario" inputmode="numeric"
-      placeholder="Ej: 1020777056" oninput="buscarHorario()">
+    <div style="display:flex;gap:8px;">
+      <input class="h-input" type="number" id="ced-horario" inputmode="numeric"
+        placeholder="Ej: 1020777056" oninput="buscarHorario()"
+        style="flex:1;"
+        onkeydown="if(event.key==='Enter') fetchHorario(this.value.trim())">
+      <button onclick="fetchHorario(document.getElementById('ced-horario').value.trim())"
+        style="padding:12px 16px;background:#ff441b;color:#fff;border:none;
+        border-radius:10px;font-size:20px;cursor:pointer;flex-shrink:0;">🔍</button>
+    </div>
     <div id="h-error" style="font-size:12px;color:#c62828;margin-top:8px;display:none;">
       Cédula no encontrada. Verifica el número.
     </div>
@@ -264,6 +271,7 @@
 </nav>
 
 <script>
+
 
 
 
@@ -843,8 +851,10 @@ async function fetchHorario(cedula) {
   var res=document.getElementById('h-resultado');
   res.innerHTML='<div style="text-align:center;padding:24px;color:#888;font-size:13px;">Cargando...</div>';
   try {
-    var r=await fetch(H_URL+'?action=getHorarioColaborador&cedula='+cedula+'&fechaIni='+fmtF(semana[0])+'&fechaFin='+fmtF(semana[13]));
-    var d=await r.json();
+    var url=H_URL+'?action=getHorarioColaborador&cedula='+cedula+'&fechaIni='+fmtF(semana[0])+'&fechaFin='+fmtF(semana[13]);
+    var r=await fetch(url, {redirect:'follow'});
+    var text=await r.text();
+    var d=JSON.parse(text);
     if(!d.ok||!d.horario||d.horario.length===0){
       res.innerHTML=''; document.getElementById('h-error').style.display='block'; return;
     }
@@ -926,6 +936,7 @@ var MESES_N=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","
 function getSemanaActual(){var h=new Date(),dow=h.getDay(),lun=new Date(h);lun.setDate(h.getDate()-(dow===0?6:dow-1));lun.setHours(0,0,0,0);return Array.from({length:7},function(_,i){var d=new Date(lun);d.setDate(lun.getDate()+i);return d;});}
 function fmtF(d){return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();}
 function esHoyH(d){var h=new Date();return d.getDate()===h.getDate()&&d.getMonth()===h.getMonth()&&d.getFullYear()===h.getFullYear();}
+
 
 
 
