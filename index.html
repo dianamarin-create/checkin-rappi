@@ -277,6 +277,7 @@
 
 
 
+
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx5Yr3K0KuRJwAIYGyXdSR0gqpcge1qWN6aD-v-VQfAhvKhl5YyiF6KH9FZV7cLbNZY/exec";
 
 
@@ -846,12 +847,15 @@ function buscarHorario() {
 }
 
 async function fetchHorario(cedula) {
-  var semana=getSemanaActual();
-  var ini=fmtF(semana[0]), fin=fmtF(semana[13]);
-  var res=document.getElementById('h-resultado');
+  if(!cedula || cedula.length < 6) return;
+  var semana = getSemanaActual();
+  if(!semana || semana.length < 14) { console.error('semana inválida', semana); return; }
+  var ini = fmtF(semana[0]);
+  var fin = fmtF(semana[13]);
+  var res = document.getElementById('h-resultado');
   res.innerHTML='<div style="text-align:center;padding:24px;color:#888;font-size:13px;">Cargando...</div>';
   try {
-    var url=H_URL+'?action=getHorarioColaborador&cedula='+cedula+'&fechaIni='+fmtF(semana[0])+'&fechaFin='+fmtF(semana[13]);
+    var url = H_URL+'?action=getHorarioColaborador&cedula='+cedula+'&fechaIni='+ini+'&fechaFin='+fin;
     var r=await fetch(url, {redirect:'follow'});
     var text=await r.text();
     var d=JSON.parse(text);
@@ -936,6 +940,7 @@ var MESES_N=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","
 function getSemanaActual(){var h=new Date(),dow=h.getDay(),lun=new Date(h);lun.setDate(h.getDate()-(dow===0?6:dow-1));lun.setHours(0,0,0,0);return Array.from({length:7},function(_,i){var d=new Date(lun);d.setDate(lun.getDate()+i);return d;});}
 function fmtF(d){return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();}
 function esHoyH(d){var h=new Date();return d.getDate()===h.getDate()&&d.getMonth()===h.getMonth()&&d.getFullYear()===h.getFullYear();}
+
 
 
 
