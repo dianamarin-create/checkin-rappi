@@ -20,6 +20,7 @@
       --inc: #185fa5; --inc-bg: #e7f2fe;
       --vac: #6a1b9a; --vac-bg: #f3e5f5;
       --aus: #999; --aus-bg: #f5f5f3;
+      --lnr: #5c6bc0; --lnr-bg: #ede7f6;
     }
     *{box-sizing:border-box;margin:0;padding:0;}
     body{font-family:'DM Sans',sans-serif;background:var(--light);color:var(--dark);font-size:14px;}
@@ -85,6 +86,7 @@
     .celda.inc{background:var(--inc-bg);}
     .celda.vac{background:var(--vac-bg);}
     .celda.sin{background:var(--aus-bg);}
+    .celda.lnr{background:var(--lnr-bg);}
     .celda.hoy-ring{border-color:var(--rappi) !important;}
     .c-hora{font-size:11px;font-weight:500;font-family:'DM Mono',monospace;}
     .celda.trabajo .c-hora{color:var(--ok);}
@@ -92,6 +94,7 @@
     .celda.inc .c-hora{color:var(--inc);}
     .celda.vac .c-hora{color:var(--vac);}
     .celda.sin .c-hora{color:var(--aus);}
+    .celda.lnr .c-hora{color:var(--lnr);}
     .c-punto{font-size:10px;color:var(--ok);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.8;}
     .c-add{font-size:18px;color:#ccc;}
 
@@ -115,6 +118,7 @@
     .tipo-btn.sel-descanso{border-color:var(--de);background:var(--de-bg);color:var(--de);}
     .tipo-btn.sel-inc{border-color:var(--inc);background:var(--inc-bg);color:var(--inc);}
     .tipo-btn.sel-vac{border-color:var(--vac);background:var(--vac-bg);color:var(--vac);}
+    .tipo-btn.sel-lnr{border-color:var(--lnr);background:var(--lnr-bg);color:var(--lnr);}
     .form-trabajo{display:none;}
     .form-trabajo.visible{display:block;}
     .form-row{margin-bottom:12px;}
@@ -210,6 +214,7 @@
   <div class="leg"><div class="leg-dot" style="background:var(--inc-bg);border:1px solid var(--inc);"></div>Incapacidad</div>
   <div class="leg"><div class="leg-dot" style="background:var(--vac-bg);border:1px solid var(--vac);"></div>Vacaciones</div>
   <div class="leg"><div class="leg-dot" style="background:var(--aus-bg);border:1px solid #ddd;"></div>Sin asignar</div>
+  <div class="leg"><div class="leg-dot" style="background:var(--lnr-bg);border:1px solid var(--lnr);"></div>Lic. No Rem.</div>
   <span class="leg-tip">Clic en cualquier celda para editar · Guardar cuando termines</span>
 </div>
 
@@ -241,6 +246,16 @@
   </div>
 </div>
 
+
+<!-- COPY BAR -->
+<div class="copy-bar" id="copy-bar">
+  <span class="copy-pill">📋 Modo copia</span>
+  <span id="copy-desc" style="color:#ccc;font-size:12px;"></span>
+  <button class="copy-action pegar" id="btn-pegar-persona" style="display:none;" onclick="pegarEnPersona()">Pegar en persona →</button>
+  <button class="copy-action pegar" id="btn-pegar-semana"  style="display:none;" onclick="pegarSemanaCompleta()">Pegar en semana siguiente →</button>
+  <button class="copy-action cancelar" onclick="cancelarCopia()">✕ Cancelar</button>
+</div>
+
 <div class="modal-overlay" id="modal" style="display:none;" onclick="if(event.target===this)cerrarModal()">
   <div class="modal">
     <div class="modal-header">
@@ -253,11 +268,12 @@
       </div>
     </div>
     <div class="modal-body">
-      <div class="tipo-grid">
+      <div class="tipo-grid" style="grid-template-columns:1fr 1fr 1fr;">
         <button class="tipo-btn" id="tb-trabajo"   onclick="selTipo('trabajo')">Trabajo</button>
         <button class="tipo-btn" id="tb-descanso"  onclick="selTipo('descanso')">Descanso</button>
         <button class="tipo-btn" id="tb-inc"       onclick="selTipo('inc')">Incapacidad</button>
         <button class="tipo-btn" id="tb-vac"       onclick="selTipo('vac')">Vacaciones</button>
+        <button class="tipo-btn" id="tb-lnr"       onclick="selTipo('lnr')">Lic. No Rem.</button>
       </div>
       <div class="form-trabajo" id="form-trabajo">
         <div class="form-row">
@@ -487,6 +503,8 @@ function renderTabla() {
         inner = `<div class="c-hora">INC</div>`;
       } else if(cls==='vac'){
         inner = `<div class="c-hora">VAC</div>`;
+      } else if(cls==='lnr'){
+        inner = `<div class="c-hora">LNR</div>`;
       } else {
         inner = `<div class="c-add">+</div>`;
       }
@@ -542,7 +560,7 @@ function cerrarModal() {
 
 function selTipo(t) {
   tipoActivo = t;
-  ['trabajo','descanso','inc','vac'].forEach(x => {
+  ['trabajo','descanso','inc','vac','lnr'].forEach(x => {
     const btn = document.getElementById('tb-'+x);
     btn.className = 'tipo-btn';
     if(x===t) btn.classList.add('sel-'+t);
@@ -756,10 +774,19 @@ function pegarSemanaEnPersona(cedulaDestino) {
   if(!horarios[cedulaDestino]) horarios[cedulaDestino] = {};
   if(!cambios[cedulaDestino])  cambios[cedulaDestino]  = {};
 
-  semanaActual.forEach((d, i) => {
-    const fDest = fmtFecha(d);
-    // Buscar el día equivalente en el origen (mismo índice de semana)
-    const fOrigen = fechasOrigen[i];
+  // Mapear por día de la semana para que coincidan Lun→Lun, Mar→Mar, etc.
+  // aunque el offset de semana sea diferente
+  const diasOrigen = {}; // {dayOfWeek: fecha}
+  Object.keys(semanaOrigen).forEach(f => {
+    const partes = f.split('/');
+    const d = new Date(parseInt(partes[2]), parseInt(partes[1])-1, parseInt(partes[0]));
+    diasOrigen[d.getDay()] = f; // 0=dom,1=lun...6=sab
+  });
+
+  semanaActual.forEach(d => {
+    const fDest   = fmtFecha(d);
+    const dow     = d.getDay();
+    const fOrigen = diasOrigen[dow];
     if(fOrigen && semanaOrigen[fOrigen]) {
       const dia = {...semanaOrigen[fOrigen]};
       horarios[cedulaDestino][fDest] = dia;
