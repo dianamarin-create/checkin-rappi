@@ -20,7 +20,6 @@
       --inc: #185fa5; --inc-bg: #e7f2fe;
       --vac: #6a1b9a; --vac-bg: #f3e5f5;
       --aus: #999; --aus-bg: #f5f5f3;
-      --lnr: #5c6bc0; --lnr-bg: #ede7f6;
     }
     *{box-sizing:border-box;margin:0;padding:0;}
     body{font-family:'DM Sans',sans-serif;background:var(--light);color:var(--dark);font-size:14px;}
@@ -86,7 +85,6 @@
     .celda.inc{background:var(--inc-bg);}
     .celda.vac{background:var(--vac-bg);}
     .celda.sin{background:var(--aus-bg);}
-    .celda.lnr{background:var(--lnr-bg);}
     .celda.hoy-ring{border-color:var(--rappi) !important;}
     .c-hora{font-size:11px;font-weight:500;font-family:'DM Mono',monospace;}
     .celda.trabajo .c-hora{color:var(--ok);}
@@ -94,7 +92,6 @@
     .celda.inc .c-hora{color:var(--inc);}
     .celda.vac .c-hora{color:var(--vac);}
     .celda.sin .c-hora{color:var(--aus);}
-    .celda.lnr .c-hora{color:var(--lnr);}
     .c-punto{font-size:10px;color:var(--ok);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.8;}
     .c-add{font-size:18px;color:#ccc;}
 
@@ -118,7 +115,6 @@
     .tipo-btn.sel-descanso{border-color:var(--de);background:var(--de-bg);color:var(--de);}
     .tipo-btn.sel-inc{border-color:var(--inc);background:var(--inc-bg);color:var(--inc);}
     .tipo-btn.sel-vac{border-color:var(--vac);background:var(--vac-bg);color:var(--vac);}
-    .tipo-btn.sel-lnr{border-color:var(--lnr);background:var(--lnr-bg);color:var(--lnr);}
     .form-trabajo{display:none;}
     .form-trabajo.visible{display:block;}
     .form-row{margin-bottom:12px;}
@@ -172,11 +168,83 @@
     /* Semana copia overlay */
     .semana-copy-target .celda{border:1.5px dashed #ff441b !important;
       background:rgba(255,68,27,.04) !important;}
+
+    /* ── PANTALLA DE LOGIN ── */
+    .login-screen{position:fixed;inset:0;background:var(--light);z-index:999;
+      display:flex;align-items:center;justify-content:center;padding:20px;}
+    .login-card{background:#fff;border-radius:20px;padding:36px 32px;width:100%;
+      max-width:400px;box-shadow:0 8px 40px rgba(0,0,0,.12);}
+    .login-logo{display:flex;align-items:center;gap:10px;margin-bottom:28px;}
+    .login-logo-icon{width:38px;height:38px;background:var(--rappi);border-radius:10px;
+      display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:700;}
+    .login-logo-txt{font-size:16px;font-weight:600;color:var(--dark);}
+    .login-logo-sub{font-size:12px;color:var(--mid);}
+    .login-title{font-size:20px;font-weight:700;color:var(--dark);margin-bottom:4px;}
+    .login-sub{font-size:13px;color:var(--mid);margin-bottom:24px;}
+    .login-field{margin-bottom:14px;}
+    .login-label{font-size:11px;font-weight:600;color:var(--mid);text-transform:uppercase;
+      letter-spacing:.4px;display:block;margin-bottom:5px;}
+    .login-input{width:100%;padding:11px 14px;border:1.5px solid var(--border);
+      border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;
+      outline:none;color:var(--dark);transition:border-color .15s;}
+    .login-input:focus{border-color:var(--rappi);}
+    .login-btn{width:100%;padding:13px;background:var(--rappi);color:#fff;border:none;
+      border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;
+      font-family:'DM Sans',sans-serif;margin-top:4px;transition:background .15s;}
+    .login-btn:hover{background:#e03a14;}
+    .login-btn:disabled{background:#ccc;cursor:not-allowed;}
+    .login-error{background:#fce8e6;color:#c62828;border-radius:8px;padding:10px 14px;
+      font-size:13px;margin-bottom:14px;display:none;}
+    .login-loading{text-align:center;color:var(--mid);font-size:13px;padding:8px 0;display:none;}
+    /* Usuario logueado badge en topbar */
+    .user-badge{display:flex;align-items:center;gap:8px;color:#ccc;font-size:12px;}
+    .user-ter{padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;}
+    .user-ter-t1{background:#1a56db22;color:#93c5fd;}
+    .user-ter-t2{background:#92400e22;color:#fcd34d;}
+    .user-ter-admin{background:#0f6e5622;color:#6ee7b7;}
+    .logout-btn{padding:4px 10px;border-radius:6px;border:1px solid #333;
+      background:transparent;color:#888;font-size:11px;cursor:pointer;
+      font-family:'DM Sans',sans-serif;}
+    .logout-btn:hover{background:#1a1a1a;color:#fff;}
 </style>
 </head>
 <body>
 
 <!-- TOP BAR -->
+
+<!-- ══ PANTALLA DE LOGIN ══════════════════════════════════ -->
+<div class="login-screen" id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">R</div>
+      <div>
+        <div class="login-logo-txt">Rappi Operaciones</div>
+        <div class="login-logo-sub">Editor de Horarios</div>
+      </div>
+    </div>
+    <div class="login-title">Iniciar sesión</div>
+    <div class="login-sub">Ingresa tus credenciales para continuar</div>
+    <div class="login-error" id="login-error">Correo o contraseña incorrectos. Intenta de nuevo.</div>
+    <div class="login-loading" id="login-loading">Verificando credenciales...</div>
+    <div class="login-field">
+      <label class="login-label">Correo electrónico</label>
+      <input class="login-input" id="login-correo" type="email"
+        placeholder="tucorreo@gmail.com" autocomplete="email"
+        onkeydown="if(event.key==='Enter')document.getElementById('login-clave').focus()">
+    </div>
+    <div class="login-field">
+      <label class="login-label">Contraseña</label>
+      <input class="login-input" id="login-clave" type="password"
+        placeholder="••••••••" autocomplete="current-password"
+        onkeydown="if(event.key==='Enter')iniciarSesion()">
+    </div>
+    <button class="login-btn" id="login-btn" onclick="iniciarSesion()">Ingresar</button>
+    <div style="margin-top:16px;text-align:center;font-size:11px;color:var(--mid);">
+      ¿No tienes acceso? Contacta a tu coordinador de operaciones.
+    </div>
+  </div>
+</div>
+
 <div class="topbar">
   <div class="topbar-left">
     <div class="logo">R</div>
@@ -184,6 +252,11 @@
     <span class="topbar-sub">Rappi Operaciones</span>
   </div>
   <div class="topbar-right">
+    <div class="user-badge" id="user-badge" style="display:none;">
+      <span id="user-nombre" style="font-size:12px;color:#aaa;"></span>
+      <span class="user-ter" id="user-ter-badge"></span>
+      <button class="logout-btn" onclick="cerrarSesion()">Salir</button>
+    </div>
     <span class="save-status" id="save-status"></span>
     <button class="btn btn-rappi" id="btn-guardar" onclick="guardarTodo()" disabled>Guardar cambios</button>
   </div>
@@ -214,7 +287,6 @@
   <div class="leg"><div class="leg-dot" style="background:var(--inc-bg);border:1px solid var(--inc);"></div>Incapacidad</div>
   <div class="leg"><div class="leg-dot" style="background:var(--vac-bg);border:1px solid var(--vac);"></div>Vacaciones</div>
   <div class="leg"><div class="leg-dot" style="background:var(--aus-bg);border:1px solid #ddd;"></div>Sin asignar</div>
-  <div class="leg"><div class="leg-dot" style="background:var(--lnr-bg);border:1px solid var(--lnr);"></div>Lic. No Rem.</div>
   <span class="leg-tip">Clic en cualquier celda para editar · Guardar cuando termines</span>
 </div>
 
@@ -246,16 +318,6 @@
   </div>
 </div>
 
-
-<!-- COPY BAR -->
-<div class="copy-bar" id="copy-bar">
-  <span class="copy-pill">📋 Modo copia</span>
-  <span id="copy-desc" style="color:#ccc;font-size:12px;"></span>
-  <button class="copy-action pegar" id="btn-pegar-persona" style="display:none;" onclick="pegarEnPersona()">Pegar en persona →</button>
-  <button class="copy-action pegar" id="btn-pegar-semana"  style="display:none;" onclick="pegarSemanaCompleta()">Pegar en semana siguiente →</button>
-  <button class="copy-action cancelar" onclick="cancelarCopia()">✕ Cancelar</button>
-</div>
-
 <div class="modal-overlay" id="modal" style="display:none;" onclick="if(event.target===this)cerrarModal()">
   <div class="modal">
     <div class="modal-header">
@@ -268,12 +330,11 @@
       </div>
     </div>
     <div class="modal-body">
-      <div class="tipo-grid" style="grid-template-columns:1fr 1fr 1fr;">
+      <div class="tipo-grid">
         <button class="tipo-btn" id="tb-trabajo"   onclick="selTipo('trabajo')">Trabajo</button>
         <button class="tipo-btn" id="tb-descanso"  onclick="selTipo('descanso')">Descanso</button>
         <button class="tipo-btn" id="tb-inc"       onclick="selTipo('inc')">Incapacidad</button>
         <button class="tipo-btn" id="tb-vac"       onclick="selTipo('vac')">Vacaciones</button>
-        <button class="tipo-btn" id="tb-lnr"       onclick="selTipo('lnr')">Lic. No Rem.</button>
       </div>
       <div class="form-trabajo" id="form-trabajo">
         <div class="form-row">
@@ -374,6 +435,9 @@ const MESES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov"
 
 let rolActivo   = "Brigadista";
 let semOffset   = 0;
+// ── Sesión ────────────────────────────────────────────────
+let sesion = null; // { correo, nombre, territorio } — null = no autenticado
+
 let empleados   = [];
 let horarios    = {}; // {cedula: {fecha: {tipo,entrada,salida,punto}}}
 let cambios     = {}; // cambios pendientes de guardar
@@ -413,6 +477,114 @@ function toast(msg,ok=true) {
   setTimeout(()=>el.className='toast',2500);
 }
 
+
+// ══ AUTENTICACIÓN ═══════════════════════════════════════
+
+async function iniciarSesion() {
+  const correo = document.getElementById('login-correo').value.trim().toLowerCase();
+  const clave  = document.getElementById('login-clave').value.trim();
+  const errEl  = document.getElementById('login-error');
+  const loadEl = document.getElementById('login-loading');
+  const btn    = document.getElementById('login-btn');
+
+  errEl.style.display  = 'none';
+  if(!correo || !clave) {
+    errEl.textContent = 'Ingresa tu correo y contraseña.';
+    errEl.style.display = 'block'; return;
+  }
+
+  btn.disabled = true;
+  loadEl.style.display = 'block';
+
+  try {
+    const url = SCRIPT_URL + '?action=validarAcceso&correo=' +
+                encodeURIComponent(correo) + '&clave=' + encodeURIComponent(clave);
+    const r = await fetch(url);
+    const d = await r.json();
+
+    if(d.ok && d.acceso) {
+      sesion = { correo: d.correo, nombre: d.nombre, territorio: d.territorio.toUpperCase() };
+      // Guardar en sessionStorage para no pedir login al recargar en la misma pestaña
+      sessionStorage.setItem('rappi_sesion', JSON.stringify(sesion));
+      mostrarEditor();
+    } else {
+      errEl.textContent = 'Correo o contraseña incorrectos.';
+      errEl.style.display = 'block';
+    }
+  } catch(e) {
+    errEl.textContent = 'Error de conexión. Verifica tu internet.';
+    errEl.style.display = 'block';
+  }
+
+  btn.disabled = false;
+  loadEl.style.display = 'none';
+}
+
+function mostrarEditor() {
+  if(!sesion) return;
+  document.getElementById('login-screen').style.display = 'none';
+
+  // Mostrar badge de usuario en topbar
+  const badge   = document.getElementById('user-badge');
+  const terBadge = document.getElementById('user-ter-badge');
+  document.getElementById('user-nombre').textContent = sesion.nombre;
+  badge.style.display = 'flex';
+
+  const ter = sesion.territorio;
+  if(ter === 'ADMIN') {
+    terBadge.textContent = 'Admin';
+    terBadge.className = 'user-ter user-ter-admin';
+  } else if(ter === 'T1') {
+    terBadge.textContent = 'T1';
+    terBadge.className = 'user-ter user-ter-t1';
+  } else {
+    terBadge.textContent = 'T2';
+    terBadge.className = 'user-ter user-ter-t2';
+  }
+
+  // Bloquear filtro de territorio si no es admin
+  if(ter !== 'ADMIN') {
+    territorioActivo = ter;
+    // Ocultar tabs de territorio — el usuario solo ve el suyo
+    document.querySelectorAll('.ter-tab').forEach(t => {
+      t.style.display = 'none';
+    });
+    document.querySelector('.filtro-label[data-ter]') &&
+      (document.querySelector('.filtro-label[data-ter]').style.display = 'none');
+    // Mostrar solo su territorio como texto
+    const terLabel = document.querySelector('.filtro-group:nth-child(2) .filtro-label');
+    if(terLabel) terLabel.textContent = 'Territorio: ' + ter;
+  }
+
+  cargarEmpleados();
+}
+
+function cerrarSesion() {
+  sesion = null;
+  sessionStorage.removeItem('rappi_sesion');
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-clave').value = '';
+  document.getElementById('login-error').style.display = 'none';
+  document.getElementById('user-badge').style.display = 'none';
+  empleados = []; horarios = {}; cambios = {};
+  document.getElementById('tbody').innerHTML = '';
+  document.getElementById('thead').innerHTML = '';
+}
+
+// Verificar sesión guardada al cargar
+function verificarSesionGuardada() {
+  const saved = sessionStorage.getItem('rappi_sesion');
+  if(saved) {
+    try {
+      sesion = JSON.parse(saved);
+      mostrarEditor();
+      return;
+    } catch(e) {}
+  }
+  // Sin sesión — mostrar login
+  document.getElementById('login-screen').style.display = 'flex';
+}
+
 // ── CARGA DE DATOS ────────────────────────────────────────────
 async function cargarEmpleados() {
   try {
@@ -449,7 +621,17 @@ async function cargarEmpleados() {
 // ── RENDER ────────────────────────────────────────────────────
 function renderTabla() {
   const semana  = getSemana();
-  const emp     = empleados.filter(e => e.rol === rolActivo && e.activo !== "NO");
+  // Filtrar por rol, activo y territorio de sesión
+  const terFiltro = sesion && sesion.territorio !== 'ADMIN' ? sesion.territorio : territorioActivo;
+  const emp = empleados.filter(e => {
+    if(e.rol !== rolActivo) return false;
+    if(e.activo === 'NO') return false;
+    if(terFiltro && terFiltro !== 'Todos') {
+      const eTer = (e.territorio || '').toUpperCase();
+      if(eTer !== terFiltro.toUpperCase()) return false;
+    }
+    return true;
+  });
 
   // Semana label
   const s0=semana[0], s6=semana[6];
@@ -503,8 +685,6 @@ function renderTabla() {
         inner = `<div class="c-hora">INC</div>`;
       } else if(cls==='vac'){
         inner = `<div class="c-hora">VAC</div>`;
-      } else if(cls==='lnr'){
-        inner = `<div class="c-hora">LNR</div>`;
       } else {
         inner = `<div class="c-add">+</div>`;
       }
@@ -560,7 +740,7 @@ function cerrarModal() {
 
 function selTipo(t) {
   tipoActivo = t;
-  ['trabajo','descanso','inc','vac','lnr'].forEach(x => {
+  ['trabajo','descanso','inc','vac'].forEach(x => {
     const btn = document.getElementById('tb-'+x);
     btn.className = 'tipo-btn';
     if(x===t) btn.classList.add('sel-'+t);
@@ -774,19 +954,10 @@ function pegarSemanaEnPersona(cedulaDestino) {
   if(!horarios[cedulaDestino]) horarios[cedulaDestino] = {};
   if(!cambios[cedulaDestino])  cambios[cedulaDestino]  = {};
 
-  // Mapear por día de la semana para que coincidan Lun→Lun, Mar→Mar, etc.
-  // aunque el offset de semana sea diferente
-  const diasOrigen = {}; // {dayOfWeek: fecha}
-  Object.keys(semanaOrigen).forEach(f => {
-    const partes = f.split('/');
-    const d = new Date(parseInt(partes[2]), parseInt(partes[1])-1, parseInt(partes[0]));
-    diasOrigen[d.getDay()] = f; // 0=dom,1=lun...6=sab
-  });
-
-  semanaActual.forEach(d => {
-    const fDest   = fmtFecha(d);
-    const dow     = d.getDay();
-    const fOrigen = diasOrigen[dow];
+  semanaActual.forEach((d, i) => {
+    const fDest = fmtFecha(d);
+    // Buscar el día equivalente en el origen (mismo índice de semana)
+    const fOrigen = fechasOrigen[i];
     if(fOrigen && semanaOrigen[fOrigen]) {
       const dia = {...semanaOrigen[fOrigen]};
       horarios[cedulaDestino][fDest] = dia;
@@ -875,8 +1046,8 @@ function activarGuardar() {
 // Alerta si hay cambios sin guardar
 window.onbeforeunload = () => Object.keys(cambios).length>0 ? true : undefined;
 
-// Iniciar
-cargarEmpleados();
+// Iniciar — verificar sesión primero
+verificarSesionGuardada();
 
 
 
