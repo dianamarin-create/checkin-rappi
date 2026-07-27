@@ -941,46 +941,49 @@ function setRol(r) {
   renderTabla();
 }
 
-function cambiarSemana(d) { semOffset+=d; renderTabla(); }
+function cambiarSemana(d) { semOffset+=d; renderTabla(); if(modoCopia) activarModoCopia(document.getElementById("copy-desc").textContent, document.getElementById("btn-pegar-persona").style.display!=="none", document.getElementById("btn-pegar-semana").style.display!=="none"); }
 function irHoy()          { semOffset=0;  renderTabla(); }
 
 // ══ LÓGICA DE COPIA ════════════════════════════════════
-let modoCopia = null; // { tipo, cedula, fecha, dias, semanaOffset }
-let celdaCtx  = null; // celda del clic derecho
+let modoCopia = null;
+let celdaCtx  = null;
 
-// Abrir menú contextual con clic derecho en celda
 function abrirContextMenu(e, cedula, fecha) {
   e.preventDefault();
   e.stopPropagation();
   if(modoVisor) return;
   celdaCtx = { cedula, fecha };
-
   const menu = document.getElementById('ctx-menu');
   menu.style.left = Math.min(e.clientX, window.innerWidth  - 220) + 'px';
-  menu.style.top  = Math.min(e.clientY, window.innerHeight - 160) + 'px';
+  menu.style.top  = Math.min(e.clientY, window.innerHeight - 200) + 'px';
   menu.classList.add('visible');
 }
 
-// Cerrar menú al clic fuera
 document.addEventListener('click', () => {
   document.getElementById('ctx-menu').classList.remove('visible');
 });
 
-// ── COPIAR DÍA ───────────────────────────────────────
+// ── OPCIÓN 1: COPIAR DÍA ─────────────────────────────────
+// Copia el turno de una celda específica.
+// Para pegar: haz clic en cualquier celda destino.
 function copiarDia() {
   if(!celdaCtx) return;
   const { cedula, fecha } = celdaCtx;
   const dia = (horarios[cedula]||{})[fecha];
-  if(!dia || dia.tipo === 'sin') { toast('No hay turno para copiar'); return; }
+  if(!dia || dia.tipo === 'sin') { toast('No hay turno para copiar en ese día'); return; }
 
-  modoCopia = { tipo: 'dia', cedula, fecha, dia: {...dia} };
+  modoCopia = { tipo: 'dia', dia: {...dia} };
   const emp = empleados.find(e => e.cedula === cedula);
-  const desc = 'Copiando día ' + fecha + ' de ' + (emp ? emp.nombre.split(' ')[0] : cedula);
-  activarModoCopia(desc, false, false);
-  toast('Haz clic en cualquier celda para pegar el turno');
+  activarModoCopia(
+    '📅 Día ' + fecha + ' de ' + (emp ? emp.nombre.split(' ')[0] : cedula) +
+    ' copiado — haz clic en cualquier celda para pegar',
+    false, false
+  );
 }
 
-// ── COPIAR SEMANA DE UNA PERSONA ─────────────────────
+// ── OPCIÓN 2: COPIAR SEMANA DE UNA PERSONA ───────────────
+// Copia los 7 días de la semana de una persona.
+// Para pegar: presiona "Pegar en persona" o haz clic en una celda de otra persona.
 function copiarSemanaPersona() {
   if(!celdaCtx) return;
   const { cedula } = celdaCtx;
@@ -989,19 +992,23 @@ function copiarSemanaPersona() {
   semana.forEach(d => {
     const f = fmtFecha(d);
     const dia = (horarios[cedula]||{})[f];
-    if(dia) dias[f] = {...dia};
+    if(dia && dia.tipo !== 'sin') dias[f] = {...dia};
   });
 
-  if(Object.keys(dias).length === 0) { toast('No hay horario esta semana para copiar'); return; }
+  if(Object.keys(dias).length === 0) { toast('Esta persona no tiene horario asignado esta semana'); return; }
 
   modoCopia = { tipo: 'semana_persona', cedula, dias, semanaOffset };
   const emp = empleados.find(e => e.cedula === cedula);
-  const desc = 'Semana de ' + (emp ? emp.nombre.split(' ')[0] : cedula) + ' copiada';
-  activarModoCopia(desc, true, false);
-  toast('Elige "Pegar semana en persona" o haz clic en un nombre de fila');
+  activarModoCopia(
+    '👤 Semana de ' + (emp ? emp.nombre.split(' ')[0] : cedula) +
+    ' copiada — navega a la semana destino y elige una persona',
+    true, false
+  );
 }
 
-// ── COPIAR SEMANA A SEMANA SIGUIENTE (todos) ──────────
+// ── OPCIÓN 3: COPIAR SEMANA COMPLETA → SEMANA SIGUIENTE ──
+// Copia todos los horarios de todas las personas de la semana actual.
+// Para pegar: presiona "Pegar en semana siguiente".
 function copiarSemanaATodos() {
   const semana = getSemana();
   const emp = empleados.filter(e => e.rol === rolActivo);
@@ -1012,132 +1019,21 @@ function copiarSemanaATodos() {
     semana.forEach(d => {
       const f = fmtFecha(d);
       const dia = (horarios[e.cedula]||{})[f];
-      if(dia) snapshot[e.cedula][f] = {...dia};
+      if(dia && dia.tipo !== 'sin') snapshot[e.cedula][f] = {...dia};
     });
   });
+
+  const totalDias = Object.values(snapshot).reduce((s, p) => s + Object.keys(p).length, 0);
+  if(totalDias === 0) { toast('No hay horarios asignados esta semana'); return; }
 
   modoCopia = { tipo: 'semana_todos', snapshot, semanaOffset };
-  activarModoCopia(`Semana completa de ${emp.length} personas copiada`, false, true);
-  toast('Haz clic en "Pegar en semana completa →" para aplicar a la semana siguiente');
+  activarModoCopia(
+    '👥 Semana completa de ' + emp.length + ' personas copiada — presiona "Pegar en semana siguiente"',
+    false, true
+  );
 }
 
-// ── ACTIVAR MODO COPIA ────────────────────────────────
-function activarModoCopia(desc, mostrarPersona, mostrarSemana) {
-  document.getElementById('copy-bar').classList.add('visible');
-  document.getElementById('copy-desc').textContent = desc;
-  document.getElementById('btn-pegar-persona').style.display = mostrarPersona ? 'block' : 'none';
-  document.getElementById('btn-pegar-semana').style.display  = mostrarSemana  ? 'block' : 'none';
-  // Re-renderizar para que las celdas tengan onclick con modoCopia activo
-  renderTabla();
-}
-
-function cancelarCopia() {
-  modoCopia = null;
-  document.getElementById('copy-bar').classList.remove('visible');
-  renderTabla();
-}
-
-// ── PEGAR DÍA O SEMANA EN CELDA ──────────────────────
-function pegarEnCelda(cedula, fecha) {
-  if(!modoCopia) return false;
-
-  if(modoCopia.tipo === 'dia') {
-    // Pegar el día copiado en esta celda
-    if(!horarios[cedula]) horarios[cedula] = {};
-    if(!cambios[cedula])  cambios[cedula]  = {};
-    const nuevoDia = {...modoCopia.dia};
-    horarios[cedula][fecha] = nuevoDia;
-    cambios[cedula][fecha]  = nuevoDia;
-    activarGuardar();
-    toast(`✓ Turno pegado`);
-    renderTabla();
-    return true;
-  }
-
-  if(modoCopia.tipo === 'semana_persona') {
-    // Al hacer clic en una celda, pegar toda la semana de esa persona
-    pegarSemanaEnPersona(cedula);
-    return true;
-  }
-
-  return false;
-}
-
-// ── PEGAR SEMANA EN PERSONA (botón o clic en nombre) ──
-function pegarSemanaEnPersona(cedulaDestino) {
-  if(!modoCopia || modoCopia.tipo !== 'semana_persona') return;
-
-  const semanaOrigen = modoCopia.dias;
-  const semanaActual = getSemana();
-
-  // Mapear fechas origen → fechas destino por posición de día de la semana
-  const fechasOrigen = Object.keys(semanaOrigen).sort();
-
-  // Obtener la semana origen para calcular el desplazamiento
-  const offsetDias = (semOffset - modoCopia.semanaOffset) * 7;
-
-  if(!horarios[cedulaDestino]) horarios[cedulaDestino] = {};
-  if(!cambios[cedulaDestino])  cambios[cedulaDestino]  = {};
-
-  semanaActual.forEach((d, i) => {
-    const fDest = fmtFecha(d);
-    // Buscar el día equivalente en el origen (mismo índice de semana)
-    const fOrigen = fechasOrigen[i];
-    if(fOrigen && semanaOrigen[fOrigen]) {
-      const dia = {...semanaOrigen[fOrigen]};
-      horarios[cedulaDestino][fDest] = dia;
-      cambios[cedulaDestino][fDest]  = dia;
-    }
-  });
-
-  activarGuardar();
-  cancelarCopia();
-  toast('✓ Semana pegada en ' + (empleados.find(e=>e.cedula===cedulaDestino)||{nombre:cedulaDestino}).nombre.split(' ')[0]);
-}
-
-function pegarEnPersona() {
-  var emp = empleados.filter(function(e){ return e.rol === rolActivo; });
-  var lista = emp.map(function(e,i){ return (i+1) + '. ' + e.nombre; });
-  var msg = 'Selecciona la persona (escribe el numero):';
-  for(var i=0; i<lista.length; i++) { msg += ' | ' + lista[i]; }
-  var sel = prompt(msg);
-  if(!sel) return;
-  var idx = parseInt(sel) - 1;
-  if(idx >= 0 && idx < emp.length) {
-    pegarSemanaEnPersona(emp[idx].cedula);
-  }
-}
-
-// ── PEGAR SEMANA COMPLETA (todos → semana siguiente) ──
-function pegarSemanaCompleta() {
-  if(!modoCopia || modoCopia.tipo !== 'semana_todos') return;
-
-  const snapshot = modoCopia.snapshot;
-  const semanaOrigen = obtenerFechasSemana(modoCopia.semanaOffset);
-  const semanaDest   = obtenerFechasSemana(modoCopia.semanaOffset + 1);
-
-  Object.keys(snapshot).forEach(cedula => {
-    if(!horarios[cedula]) horarios[cedula] = {};
-    if(!cambios[cedula])  cambios[cedula]  = {};
-
-    semanaOrigen.forEach((fo, i) => {
-      const fd  = semanaDest[i];
-      const dia = snapshot[cedula][fo];
-      if(dia) {
-        horarios[cedula][fd] = {...dia};
-        cambios[cedula][fd]  = {...dia};
-      }
-    });
-  });
-
-  activarGuardar();
-  // Ir a la semana siguiente para ver el resultado
-  semOffset = modoCopia.semanaOffset + 1;
-  cancelarCopia();
-  toast('✓ Semana copiada a la semana siguiente');
-}
-
-// ── BORRAR DÍA ────────────────────────────────────────
+// ── BORRAR DÍA ────────────────────────────────────────────
 function borrarDia() {
   if(!celdaCtx) return;
   const { cedula, fecha } = celdaCtx;
@@ -1150,7 +1046,125 @@ function borrarDia() {
   toast('Día borrado');
 }
 
-// ── UTILIDADES ────────────────────────────────────────
+// ── ACTIVAR BARRA DE COPIA ────────────────────────────────
+function activarModoCopia(desc, mostrarPersona, mostrarSemana) {
+  document.getElementById('copy-bar').classList.add('visible');
+  document.getElementById('copy-desc').textContent = desc;
+  document.getElementById('btn-pegar-persona').style.display = mostrarPersona ? 'inline-block' : 'none';
+  document.getElementById('btn-pegar-semana').style.display  = mostrarSemana  ? 'inline-block' : 'none';
+  renderTabla(); // re-renderizar para activar clic en celdas
+}
+
+function cancelarCopia() {
+  modoCopia = null;
+  document.getElementById('copy-bar').classList.remove('visible');
+  renderTabla();
+}
+
+// ── PEGAR AL HACER CLIC EN CELDA ─────────────────────────
+function pegarEnCelda(cedula, fecha) {
+  if(!modoCopia) return false;
+
+  if(modoCopia.tipo === 'dia') {
+    // Pegar el día copiado en esta celda exacta
+    if(!horarios[cedula]) horarios[cedula] = {};
+    if(!cambios[cedula])  cambios[cedula]  = {};
+    horarios[cedula][fecha] = {...modoCopia.dia};
+    cambios[cedula][fecha]  = {...modoCopia.dia};
+    activarGuardar();
+    toast('✓ Turno pegado en ' + fecha);
+    // Mantener modo copia para poder seguir pegando en más celdas
+    renderTabla();
+    return true;
+  }
+
+  if(modoCopia.tipo === 'semana_persona') {
+    // Al hacer clic en cualquier celda de una persona → pegar semana completa en esa persona
+    pegarSemanaEnPersona(cedula);
+    return true;
+  }
+
+  return false;
+}
+
+// ── PEGAR SEMANA EN PERSONA (botón o clic en celda) ───────
+function pegarSemanaEnPersona(cedulaDestino) {
+  if(!modoCopia || modoCopia.tipo !== 'semana_persona') return;
+
+  const semanaOrigen = modoCopia.dias;
+  const semanaActual = getSemana();
+
+  // Mapear por día de la semana (Lun→Lun, Mar→Mar...)
+  const diasOrigen = {};
+  Object.keys(semanaOrigen).forEach(f => {
+    const p = f.split('/');
+    const d = new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0]));
+    diasOrigen[d.getDay()] = f;
+  });
+
+  if(!horarios[cedulaDestino]) horarios[cedulaDestino] = {};
+  if(!cambios[cedulaDestino])  cambios[cedulaDestino]  = {};
+
+  let pegados = 0;
+  semanaActual.forEach(d => {
+    const fDest   = fmtFecha(d);
+    const fOrigen = diasOrigen[d.getDay()];
+    if(fOrigen && semanaOrigen[fOrigen]) {
+      horarios[cedulaDestino][fDest] = {...semanaOrigen[fOrigen]};
+      cambios[cedulaDestino][fDest]  = {...semanaOrigen[fOrigen]};
+      pegados++;
+    }
+  });
+
+  activarGuardar();
+  const emp = empleados.find(e => e.cedula === cedulaDestino);
+  toast('✓ ' + pegados + ' días pegados en ' + (emp ? emp.nombre.split(' ')[0] : cedulaDestino));
+  cancelarCopia();
+}
+
+function pegarEnPersona() {
+  // Botón "Pegar en persona" — pide elegir de la lista
+  const emp = empleados.filter(e => e.rol === rolActivo);
+  if(emp.length === 0) { toast('No hay personas disponibles'); return; }
+  const lista = emp.map((e,i) => (i+1) + '. ' + e.nombre).join('\n');
+  const sel = prompt('Selecciona la persona (número):\n' + lista);
+  if(!sel) return;
+  const idx = parseInt(sel) - 1;
+  if(idx >= 0 && idx < emp.length) {
+    pegarSemanaEnPersona(emp[idx].cedula);
+  } else {
+    toast('Número inválido', false);
+  }
+}
+
+// ── PEGAR SEMANA COMPLETA → SEMANA SIGUIENTE ──────────────
+function pegarSemanaCompleta() {
+  if(!modoCopia || modoCopia.tipo !== 'semana_todos') return;
+
+  const snapshot     = modoCopia.snapshot;
+  const semanaOrigen = obtenerFechasSemana(modoCopia.semanaOffset);
+  const semanaDest   = obtenerFechasSemana(modoCopia.semanaOffset + 1);
+
+  Object.keys(snapshot).forEach(cedula => {
+    if(!horarios[cedula]) horarios[cedula] = {};
+    if(!cambios[cedula])  cambios[cedula]  = {};
+    semanaOrigen.forEach((fo, i) => {
+      const fd  = semanaDest[i];
+      const dia = snapshot[cedula][fo];
+      if(dia) {
+        horarios[cedula][fd] = {...dia};
+        cambios[cedula][fd]  = {...dia};
+      }
+    });
+  });
+
+  activarGuardar();
+  semOffset = modoCopia.semanaOffset + 1;
+  cancelarCopia();
+  toast('✓ Semana completa copiada a la semana siguiente');
+}
+
+// ── UTILIDADES ────────────────────────────────────────────
 function obtenerFechasSemana(offset) {
   const h = new Date();
   const dow = h.getDay();
