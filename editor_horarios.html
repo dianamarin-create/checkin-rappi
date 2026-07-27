@@ -580,7 +580,7 @@ function cerrarSesion() {
 
 // Verificar sesión guardada al cargar
 function verificarSesionGuardada() {
-  // Revisar si hay sesión guardada del navegador
+  // Intentar recuperar sesión guardada
   try {
     const saved = sessionStorage.getItem('rappi_sesion');
     if(saved) {
@@ -594,7 +594,7 @@ function verificarSesionGuardada() {
     sesion = null;
     modoVisor = true;
   }
-  // Cargar empleados siempre — en visor o con sesión
+  // Siempre cargar — en visor o con sesión
   cargarEmpleados();
 }
 
@@ -650,24 +650,33 @@ function aplicarSesion() {
 
 // ── CARGA DE DATOS ────────────────────────────────────────────
 async function cargarEmpleados() {
+  // Mostrar indicador de carga
+  document.getElementById('tbody').innerHTML =
+    '<tr><td colspan="9" style="padding:24px;text-align:center;color:#aaa;font-size:13px;">Cargando horarios...</td></tr>';
+
   try {
-    const r = await fetch(SCRIPT_URL + '?action=getConfig&sheetId=' + SHEET_ID);
-    const d = await r.json();
+    const url = SCRIPT_URL + '?action=getConfig&sheetId=' + SHEET_ID;
+    const r = await fetch(url);
+    const texto = await r.text();
+    const d = JSON.parse(texto);
+
     if(d.ok && d.empleados && d.empleados.length > 0) {
       empleados = d.empleados;
       horarios  = d.horarios || {};
     } else {
-      console.error('Sin empleados:', JSON.stringify(d));
+      document.getElementById('tbody').innerHTML =
+        '<tr><td colspan="9" style="padding:24px;text-align:center;color:#c62828;font-size:13px;">' +
+        '⚠️ Error al cargar: ' + JSON.stringify(d) + '</td></tr>';
+      return;
     }
-  } catch(e) {
-    console.error('Error cargarEmpleados:', e.message);
-    // Fallback datos de muestra
-    empleados = [
-      {nombre:"ANDERSON ROA", cedula:"1020777056", tipo:"Directo", modalidad:"Terreno", rol:"Brigadista", territorio:"T1"},
-      {nombre:"ANGGY CHACON", cedula:"1018517750", tipo:"Directo", modalidad:"Terreno", rol:"Brigadista", territorio:"T1"},
-    ];
+  } catch(err) {
+    document.getElementById('tbody').innerHTML =
+      '<tr><td colspan="9" style="padding:24px;text-align:center;color:#c62828;font-size:13px;">' +
+      '⚠️ Error de conexión: ' + err.message + '</td></tr>';
+    return;
   }
-  // Aplicar UI de sesión si existe
+
+  // Aplicar UI de sesión si hay sesión activa
   if(sesion && !modoVisor) aplicarUISession();
   renderTabla();
 }
@@ -675,13 +684,17 @@ async function cargarEmpleados() {
 // ── RENDER ────────────────────────────────────────────────────
 function renderTabla() {
   const semana  = getSemana();
-  // En modo visor o sin sesion: mostrar todos sin filtro de territorio
-  const terFiltro = (sesion && sesion.territorio && sesion.territorio !== 'ADMIN')
-    ? sesion.territorio : territorioActivo;
+  // Filtrar por rol y activo siempre; territorio solo si hay sesión con territorio específico
+  const terFiltro = (sesion && !modoVisor && sesion.territorio && sesion.territorio !== 'ADMIN')
+    ? sesion.territorio
+    : territorioActivo;
   const emp = empleados.filter(e => {
     if(e.rol !== rolActivo) return false;
     if(e.activo === 'NO') return false;
-    if(!modoVisor && terFiltro && terFiltro !== 'Todos') {
+    // En modo visor: mostrar todos sin filtro de territorio
+    if(modoVisor) return true;
+    // Con sesión: filtrar por territorio si aplica
+    if(terFiltro && terFiltro !== 'Todos') {
       const eTer = (e.territorio || '').toUpperCase().trim();
       if(eTer && eTer !== terFiltro.toUpperCase()) return false;
     }
