@@ -140,9 +140,8 @@
     .loading-row td{padding:24px;text-align:center;color:var(--mid);font-size:13px;}
   
     /* ── Modo copia ── */
-    .copy-bar{background:#1a1a1a;border-bottom:1px solid #333;padding:8px 24px;
-      display:none;align-items:center;gap:12px;flex-wrap:wrap;}
-    .copy-bar.visible{display:flex;}
+    .copy-bar{background:#1a1a1a;border-bottom:1px solid #333;padding:8px 24px;display:none;align-items:center;gap:12px;flex-wrap:wrap;}
+    .copy-bar.visible{display:flex !important;}
     .copy-pill{background:#ff441b;color:#fff;font-size:12px;font-weight:500;
       padding:4px 12px;border-radius:20px;white-space:nowrap;}
     .copy-action{padding:6px 14px;border-radius:8px;font-size:12px;cursor:pointer;
@@ -170,8 +169,7 @@
       background:rgba(255,68,27,.04) !important;}
 
     /* ── MODAL DE LOGIN (ya no es pantalla completa) ── */
-    .login-screen{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:999;
-      display:none;align-items:center;justify-content:center;padding:20px;}
+    .login-screen{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:999;display:none;align-items:center;justify-content:center;padding:20px;}
     .login-screen.visible{display:flex;}
     .login-card{background:#fff;border-radius:20px;padding:36px 32px;width:100%;
       max-width:400px;box-shadow:0 8px 40px rgba(0,0,0,.12);}
@@ -585,12 +583,13 @@ function verificarSesionGuardada() {
   if(saved) {
     try {
       sesion = JSON.parse(saved);
-      aplicarSesion();
-      return;
-    } catch(e) {}
+      modoVisor = false;
+    } catch(e) {
+      sesion = null;
+    }
   }
-  // Sin sesión — cargar en modo visor directamente
-  modoVisor = true;
+  // Siempre cargar empleados — modo visor si no hay sesión
+  if(!sesion) modoVisor = true;
   cargarEmpleados();
 }
 
@@ -603,10 +602,12 @@ function cerrarModalLogin() {
   document.getElementById('login-screen').classList.remove('visible');
 }
 
-function aplicarSesion() {
+
+// ── APLICAR UI DE SESIÓN (solo interfaz, sin recargar datos) ──
+function aplicarUISession() {
+  if(!sesion) return;
   modoVisor = false;
   document.getElementById('login-screen').classList.remove('visible');
-  // Badge usuario
   const badge    = document.getElementById('user-badge');
   const terBadge = document.getElementById('user-ter-badge');
   document.getElementById('user-nombre').textContent = sesion.nombre;
@@ -628,9 +629,13 @@ function aplicarSesion() {
     territorioActivo = ter;
     document.querySelectorAll('.ter-tab').forEach(t => t.style.display = 'none');
   }
+}
+
+function aplicarSesion() {
+  if(!sesion) return;
   sessionStorage.setItem('rappi_sesion', JSON.stringify(sesion));
-  // Si empleados ya están cargados (venía de modo visor), solo re-renderizar
-  // Si no, cargar desde el servidor
+  aplicarUISession();
+  // Si empleados ya cargados, solo re-renderizar; si no, cargar
   if(empleados.length > 0) {
     renderTabla();
   } else {
@@ -668,6 +673,8 @@ async function cargarEmpleados() {
       [fmtFecha(getSemana()[2])]: {tipo:"trabajo",entrada:"10:00",salida:"18:00",punto:"C.C COLINA"},
     };
   }
+  // Aplicar UI de sesión si existe (puede venir de sessionStorage)
+  if(sesion && !modoVisor) aplicarUISession();
   renderTabla();
 }
 
