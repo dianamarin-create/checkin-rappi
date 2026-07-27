@@ -753,7 +753,10 @@ function renderTabla() {
       }
       // Clic: si hay modo copia activo, pegar; si no, abrir modal
       // Usar función dispatch que evalúa modoCopia/modoVisor en tiempo real
-      var clickHandler = modoVisor ? "" :
+      // En modo visor SIN modoCopia: sin acción
+      // En modo visor CON modoCopia: permitir pegar
+      // En modo edición: abrir modal o pegar
+      var clickHandler = (modoVisor && !modoCopia) ? "" :
         "handleCeldaClick('" + esCed + "','" + fecha + "','" + e.nombre.replace(/'/g,"&#39;") + "','" + d.getDate() + "/" + (d.getMonth()+1) + "')";
       var hoyRing = hoy ? ' hoy-ring' : '';
       var modoClass = modoCopia ? ' destino-target' : (modoVisor ? ' celda-visor' : '');
@@ -1024,6 +1027,8 @@ function activarModoCopia(desc, mostrarPersona, mostrarSemana) {
   document.getElementById('copy-desc').textContent = desc;
   document.getElementById('btn-pegar-persona').style.display = mostrarPersona ? 'block' : 'none';
   document.getElementById('btn-pegar-semana').style.display  = mostrarSemana  ? 'block' : 'none';
+  // Re-renderizar para que las celdas tengan onclick con modoCopia activo
+  renderTabla();
 }
 
 function cancelarCopia() {
