@@ -469,8 +469,9 @@ const PUNTOS = [
 const DIAS  = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
 const MESES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
 
-let rolActivo   = "Brigadista";
-let semOffset   = 0;
+let rolActivo        = "Brigadista";
+let territorioActivo = "Todos";
+let semOffset        = 0;
 // ── Sesión ────────────────────────────────────────────────
 let sesion = null; // { correo, nombre, territorio } — null = no autenticado
 
@@ -657,11 +658,37 @@ async function cargarEmpleados() {
   try {
     const url = SCRIPT_URL + '?action=getConfig&sheetId=' + SHEET_ID;
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 15000); // timeout 15s
-    const r = await fetch(url, { redirect: 'follow', signal: ctrl.signal });
+    const timer = setTimeout(() => ctrl.abort(), 20000);
+
+    let r, texto;
+    // Intento 1: fetch normal con redirect
+    try {
+      r = await fetch(url, { redirect: 'follow', signal: ctrl.signal });
+      texto = await r.text();
+    } catch(e1) {
+      // Intento 2: sin signal (algunos browsers bloquean AbortController cross-origin)
+      try {
+        r = await fetch(url, { redirect: 'follow' });
+        texto = await r.text();
+      } catch(e2) {
+        clearTimeout(timer);
+        document.getElementById('tbody').innerHTML =
+          '<tr><td colspan="9" style="padding:24px;text-align:center;color:#c62828;font-size:13px;">' +
+          '⚠️ Error de conexión: ' + e2.message + '</td></tr>';
+        return;
+      }
+    }
     clearTimeout(timer);
-    const texto = await r.text();
-    const d = JSON.parse(texto);
+
+    let d;
+    try {
+      d = JSON.parse(texto);
+    } catch(ep) {
+      document.getElementById('tbody').innerHTML =
+        '<tr><td colspan="9" style="padding:24px;text-align:center;color:#c62828;font-size:13px;">' +
+        '⚠️ Respuesta inválida del servidor.</td></tr>';
+      return;
+    }
 
     if(d.ok && d.empleados && d.empleados.length > 0) {
       empleados = d.empleados;
@@ -669,17 +696,9 @@ async function cargarEmpleados() {
     } else {
       document.getElementById('tbody').innerHTML =
         '<tr><td colspan="9" style="padding:24px;text-align:center;color:#c62828;font-size:13px;">' +
-        '⚠️ Error al cargar: ' + JSON.stringify(d) + '</td></tr>';
+        '⚠️ Sin datos: ' + JSON.stringify(d).substring(0,200) + '</td></tr>';
       return;
     }
-  } catch(err) {
-    document.getElementById('tbody').innerHTML =
-      '<tr><td colspan="9" style="padding:24px;text-align:center;color:#c62828;font-size:13px;">' +
-      '⚠️ ' + (err.name === 'AbortError'
-        ? 'Tiempo de espera agotado. Verifica que el Apps Script de Horarios esté publicado correctamente.'
-        : 'Error de conexión: ' + err.message) + '</td></tr>';
-    return;
-  }
 
   // Aplicar UI de sesión si hay sesión activa
   if(sesion && !modoVisor) aplicarUISession();
