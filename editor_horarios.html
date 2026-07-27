@@ -412,6 +412,16 @@
           <select class="form-select" id="inp-punto"></select>
         </div>
       </div>
+      <!-- Justificación — solo visible para Agente y Supervisor -->
+      <div class="form-row" id="row-justificacion" style="display:none;">
+        <span class="form-label">Motivo del ajuste <span style="color:var(--rappi)">*</span></span>
+        <textarea class="form-input" id="inp-justificacion" rows="2"
+          placeholder="Ej: Cambio de turno por solicitud del colaborador, ajuste por incapacidad..."
+          style="resize:vertical;font-family:'DM Sans',sans-serif;font-size:13px;padding:8px 10px;"></textarea>
+        <div style="font-size:11px;color:var(--mid);margin-top:3px;">
+          Este motivo quedará registrado en la hoja de horarios.
+        </div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn-modal-cancel" onclick="cerrarModal()">Cancelar</button>
@@ -759,6 +769,10 @@ function abrirModal(cedula, nombre, fecha, fechaCorta) {
 
   // Mostrar/ocultar punto según rol
   document.getElementById('row-punto').style.display = rolActivo==='Brigadista' ? 'block' : 'none';
+  // Mostrar justificación solo para Agente y Supervisor
+  const esAgenteOSup = rolActivo === 'Agente' || rolActivo === 'Supervisor';
+  document.getElementById('row-justificacion').style.display = esAgenteOSup ? 'block' : 'none';
+  if(esAgenteOSup) document.getElementById('inp-justificacion').value = '';
   document.getElementById('modal').style.display = 'flex';
 }
 
@@ -784,6 +798,18 @@ function aplicarCelda() {
   if(!horarios[cedula]) horarios[cedula]={};
   if(!cambios[cedula])  cambios[cedula]={};
 
+  // Validar justificación para Agente y Supervisor
+  const esAgenteOSup = rolActivo === 'Agente' || rolActivo === 'Supervisor';
+  let justificacion = '';
+  if(esAgenteOSup) {
+    justificacion = (document.getElementById('inp-justificacion').value || '').trim();
+    if(!justificacion) {
+      toast('Debes ingresar el motivo del ajuste', false);
+      document.getElementById('inp-justificacion').focus();
+      return;
+    }
+  }
+
   let dia = {tipo: tipoActivo};
   if(tipoActivo==='trabajo'){
     const entrada = document.getElementById('inp-entrada').value;
@@ -793,6 +819,13 @@ function aplicarCelda() {
     dia.entrada = entrada;
     dia.salida  = salida;
     if(rolActivo==='Brigadista') dia.punto = document.getElementById('inp-punto').value;
+  }
+
+  // Incluir justificación y metadata del cambio en el objeto día
+  if(justificacion) {
+    dia.justificacion = justificacion;
+    dia.editadoPor    = sesion ? sesion.nombre : 'Desconocido';
+    dia.editadoTs     = new Date().toLocaleString('es-CO', {timeZone:'America/Bogota'});
   }
 
   horarios[cedula][fecha] = dia;
@@ -820,7 +853,8 @@ async function guardarTodo() {
       action: 'saveHorarios',
       sheetId: SHEET_ID,
       rol: rolActivo,
-      cambios: cambios
+      cambios: cambios,
+      editor: sesion ? sesion.nombre : ''
     });
     await fetch(SCRIPT_URL, {
       method:'POST', body: payload
