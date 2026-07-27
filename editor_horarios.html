@@ -169,9 +169,10 @@
     .semana-copy-target .celda{border:1.5px dashed #ff441b !important;
       background:rgba(255,68,27,.04) !important;}
 
-    /* ── PANTALLA DE LOGIN ── */
-    .login-screen{position:fixed;inset:0;background:var(--light);z-index:999;
-      display:flex;align-items:center;justify-content:center;padding:20px;}
+    /* ── MODAL DE LOGIN (ya no es pantalla completa) ── */
+    .login-screen{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:999;
+      display:none;align-items:center;justify-content:center;padding:20px;}
+    .login-screen.visible{display:flex;}
     .login-card{background:#fff;border-radius:20px;padding:36px 32px;width:100%;
       max-width:400px;box-shadow:0 8px 40px rgba(0,0,0,.12);}
     .login-logo{display:flex;align-items:center;gap:10px;margin-bottom:28px;}
@@ -206,6 +207,15 @@
       background:transparent;color:#888;font-size:11px;cursor:pointer;
       font-family:'DM Sans',sans-serif;}
     .logout-btn:hover{background:#1a1a1a;color:#fff;}
+
+    /* ── MODO VISOR ── */
+    .modo-visor-bar{background:#1a1a1a;border-bottom:1px solid #333;
+      padding:7px 24px;display:flex;align-items:center;gap:12px;}
+    .modo-visor-bar span{color:#aaa;font-size:12px;}
+    .modo-visor-bar a{color:var(--rappi);font-size:12px;cursor:pointer;
+      text-decoration:none;font-weight:500;}
+    .celda-visor{cursor:default !important;pointer-events:none;}
+    .celda-visor:hover{transform:none !important;border-color:transparent !important;}
 </style>
 </head>
 <body>
@@ -239,11 +249,17 @@
         onkeydown="if(event.key==='Enter')iniciarSesion()">
     </div>
     <button class="login-btn" id="login-btn" onclick="iniciarSesion()">Ingresar</button>
+    <button onclick="cerrarModalLogin()" style="width:100%;margin-top:10px;padding:10px;
+      background:none;border:1px solid var(--border);border-radius:10px;font-size:13px;
+      cursor:pointer;color:var(--mid);font-family:'DM Sans',sans-serif;">
+      Cancelar — solo quiero ver
+    </button>
     <div style="margin-top:16px;text-align:center;font-size:11px;color:var(--mid);">
       ¿No tienes acceso? Contacta a tu coordinador de operaciones.
     </div>
   </div>
 </div>
+
 
 <div class="topbar">
   <div class="topbar-left">
@@ -258,7 +274,7 @@
       <button class="logout-btn" onclick="cerrarSesion()">Salir</button>
     </div>
     <span class="save-status" id="save-status"></span>
-    <button class="btn btn-rappi" id="btn-guardar" onclick="guardarTodo()" disabled>Guardar cambios</button>
+    <button class="btn btn-rappi" id="btn-guardar" onclick="guardarTodo()" disabled style="display:none;">Guardar cambios</button>
   </div>
 </div>
 
@@ -506,7 +522,7 @@ async function iniciarSesion() {
       sesion = { correo: d.correo, nombre: d.nombre, territorio: d.territorio.toUpperCase() };
       // Guardar en sessionStorage para no pedir login al recargar en la misma pestaña
       sessionStorage.setItem('rappi_sesion', JSON.stringify(sesion));
-      mostrarEditor();
+      aplicarSesion();
     } else {
       errEl.textContent = 'Correo o contraseña incorrectos.';
       errEl.style.display = 'block';
@@ -520,16 +536,62 @@ async function iniciarSesion() {
   loadEl.style.display = 'none';
 }
 
-function mostrarEditor() {
-  if(!sesion) return;
-  document.getElementById('login-screen').style.display = 'none';
 
-  // Mostrar badge de usuario en topbar
-  const badge   = document.getElementById('user-badge');
+// ── MODO VISOR ────────────────────────────────────────────
+let modoVisor = false;
+
+function mostrarEditor() { if(sesion) aplicarSesion(); }
+
+function cerrarSesion() {
+  sesion = null;
+  modoVisor = true;
+  sessionStorage.removeItem('rappi_sesion');
+  document.getElementById('login-clave').value = '';
+  document.getElementById('login-error').style.display = 'none';
+  document.getElementById('user-badge').style.display = 'none';
+  document.getElementById('btn-editar').style.display = 'flex';
+  document.getElementById('btn-guardar').style.display = 'none';
+  document.getElementById('btn-guardar').disabled = true;
+  territorioActivo = 'Todos';
+  document.querySelectorAll('.ter-tab').forEach(t => t.style.display = '');
+  cambios = {};
+  renderTabla();
+}
+
+// Verificar sesión guardada al cargar
+function verificarSesionGuardada() {
+  const saved = sessionStorage.getItem('rappi_sesion');
+  if(saved) {
+    try {
+      sesion = JSON.parse(saved);
+      aplicarSesion();
+      return;
+    } catch(e) {}
+  }
+  // Sin sesión — cargar en modo visor directamente
+  modoVisor = true;
+  cargarEmpleados();
+}
+
+function abrirLogin() {
+  document.getElementById('login-screen').classList.add('visible');
+  document.getElementById('login-correo').focus();
+}
+
+function cerrarModalLogin() {
+  document.getElementById('login-screen').classList.remove('visible');
+}
+
+function aplicarSesion() {
+  modoVisor = false;
+  document.getElementById('login-screen').classList.remove('visible');
+  // Badge usuario
+  const badge    = document.getElementById('user-badge');
   const terBadge = document.getElementById('user-ter-badge');
   document.getElementById('user-nombre').textContent = sesion.nombre;
   badge.style.display = 'flex';
-
+  document.getElementById('btn-editar').style.display = 'none';
+  document.getElementById('btn-guardar').style.display = 'flex';
   const ter = sesion.territorio;
   if(ter === 'ADMIN') {
     terBadge.textContent = 'Admin';
@@ -541,48 +603,12 @@ function mostrarEditor() {
     terBadge.textContent = 'T2';
     terBadge.className = 'user-ter user-ter-t2';
   }
-
-  // Bloquear filtro de territorio si no es admin
   if(ter !== 'ADMIN') {
     territorioActivo = ter;
-    // Ocultar tabs de territorio — el usuario solo ve el suyo
-    document.querySelectorAll('.ter-tab').forEach(t => {
-      t.style.display = 'none';
-    });
-    document.querySelector('.filtro-label[data-ter]') &&
-      (document.querySelector('.filtro-label[data-ter]').style.display = 'none');
-    // Mostrar solo su territorio como texto
-    const terLabel = document.querySelector('.filtro-group:nth-child(2) .filtro-label');
-    if(terLabel) terLabel.textContent = 'Territorio: ' + ter;
+    document.querySelectorAll('.ter-tab').forEach(t => t.style.display = 'none');
   }
-
-  cargarEmpleados();
-}
-
-function cerrarSesion() {
-  sesion = null;
-  sessionStorage.removeItem('rappi_sesion');
-  document.getElementById('login-screen').style.display = 'flex';
-  document.getElementById('login-clave').value = '';
-  document.getElementById('login-error').style.display = 'none';
-  document.getElementById('user-badge').style.display = 'none';
-  empleados = []; horarios = {}; cambios = {};
-  document.getElementById('tbody').innerHTML = '';
-  document.getElementById('thead').innerHTML = '';
-}
-
-// Verificar sesión guardada al cargar
-function verificarSesionGuardada() {
-  const saved = sessionStorage.getItem('rappi_sesion');
-  if(saved) {
-    try {
-      sesion = JSON.parse(saved);
-      mostrarEditor();
-      return;
-    } catch(e) {}
-  }
-  // Sin sesión — mostrar login
-  document.getElementById('login-screen').style.display = 'flex';
+  sessionStorage.setItem('rappi_sesion', JSON.stringify(sesion));
+  renderTabla();
 }
 
 // ── CARGA DE DATOS ────────────────────────────────────────────
@@ -627,8 +653,10 @@ function renderTabla() {
     if(e.rol !== rolActivo) return false;
     if(e.activo === 'NO') return false;
     if(terFiltro && terFiltro !== 'Todos') {
-      const eTer = (e.territorio || '').toUpperCase();
-      if(eTer !== terFiltro.toUpperCase()) return false;
+      const eTer = (e.territorio || '').toUpperCase().trim();
+      // Si el colaborador no tiene territorio asignado, lo incluye siempre
+      // Solo excluir si tiene territorio Y no coincide con el filtro
+      if(eTer && eTer !== terFiltro.toUpperCase()) return false;
     }
     return true;
   });
@@ -689,11 +717,12 @@ function renderTabla() {
         inner = `<div class="c-add">+</div>`;
       }
       // Clic: si hay modo copia activo, pegar; si no, abrir modal
-      var clickHandler = modoCopia
-        ? "pegarEnCelda('" + esCed + "','" + fecha + "')"
-        : "abrirModal('" + esCed + "','" + e.nombre.replace(/'/g,"&#39;") + "','" + fecha + "','" + d.getDate() + "/" + (d.getMonth()+1) + "')";
+      var clickHandler = modoVisor ? "" :
+        (modoCopia
+          ? "pegarEnCelda('" + esCed + "','" + fecha + "')"
+          : "abrirModal('" + esCed + "','" + e.nombre.replace(/'/g,"&#39;") + "','" + fecha + "','" + d.getDate() + "/" + (d.getMonth()+1) + "')");
       var hoyRing = hoy ? ' hoy-ring' : '';
-      var modoClass = modoCopia ? ' destino-target' : '';
+      var modoClass = modoCopia ? ' destino-target' : (modoVisor ? ' celda-visor' : '');
       tb += '<td class="td-dia">'
          + '<div class="celda ' + cls + hoyRing + modoClass + '"'
          + ' onclick="' + clickHandler + '"'
@@ -830,6 +859,7 @@ let celdaCtx  = null; // celda del clic derecho
 function abrirContextMenu(e, cedula, fecha) {
   e.preventDefault();
   e.stopPropagation();
+  if(modoVisor) return;
   celdaCtx = { cedula, fecha };
 
   const menu = document.getElementById('ctx-menu');
