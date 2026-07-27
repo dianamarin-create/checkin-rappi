@@ -335,6 +335,16 @@
   </div>
 </div>
 
+
+<!-- COPY BAR — aparece al copiar semana o día -->
+<div class="copy-bar" id="copy-bar">
+  <span class="copy-pill">📋 Modo copia</span>
+  <span id="copy-desc" style="color:#ccc;font-size:12px;flex:1;"></span>
+  <button class="copy-action pegar" id="btn-pegar-persona" style="display:none;" onclick="pegarEnPersona()">Pegar en persona →</button>
+  <button class="copy-action pegar" id="btn-pegar-semana"  style="display:none;" onclick="pegarSemanaCompleta()">Pegar en semana siguiente →</button>
+  <button class="copy-action cancelar" onclick="cancelarCopia()">✕ Cancelar</button>
+</div>
+
 <div class="modal-overlay" id="modal" style="display:none;" onclick="if(event.target===this)cerrarModal()">
   <div class="modal">
     <div class="modal-header">
