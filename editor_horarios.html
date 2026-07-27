@@ -997,7 +997,7 @@ function copiarSemanaPersona() {
 
   if(Object.keys(dias).length === 0) { toast('Esta persona no tiene horario asignado esta semana'); return; }
 
-  modoCopia = { tipo: 'semana_persona', cedula, dias, semanaOffset };
+  modoCopia = { tipo: 'semana_persona', cedula, dias, semanaOffset: semOffset };
   const emp = empleados.find(e => e.cedula === cedula);
   activarModoCopia(
     '👤 Semana de ' + (emp ? emp.nombre.split(' ')[0] : cedula) +
@@ -1026,7 +1026,7 @@ function copiarSemanaATodos() {
   const totalDias = Object.values(snapshot).reduce((s, p) => s + Object.keys(p).length, 0);
   if(totalDias === 0) { toast('No hay horarios asignados esta semana'); return; }
 
-  modoCopia = { tipo: 'semana_todos', snapshot, semanaOffset };
+  modoCopia = { tipo: 'semana_todos', snapshot, semanaOffset: semOffset };
   activarModoCopia(
     '👥 Semana completa de ' + emp.length + ' personas copiada — presiona "Pegar en semana siguiente"',
     false, true
