@@ -648,11 +648,21 @@ async function cargarEmpleados() {
   try {
     const r = await fetch(`${SCRIPT_URL}?action=getConfig&sheetId=${SHEET_ID}`);
     const d = await r.json();
-    if(d.ok) {
+    if(d.ok && d.empleados && d.empleados.length > 0) {
       empleados = d.empleados;
       horarios  = d.horarios || {};
+    } else {
+      // Respuesta ok pero sin empleados — mostrar error
+      console.error('getConfig sin empleados:', JSON.stringify(d));
+      document.getElementById('tbody').innerHTML =
+        '<tr><td colspan="9" style="padding:24px;text-align:center;color:#c62828;font-size:13px;">' +
+        '⚠️ No se pudieron cargar los colaboradores. Verifica que el Apps Script de Horarios ' +
+        'tenga una versión publicada actualizada (Implementar → Administrar implementaciones → Nueva versión).' +
+        '</td></tr>';
+      return;
     }
   } catch(e) {
+    console.error('Error cargarEmpleados:', e);
     // Datos de muestra para preview
     empleados = [
       {nombre:"ANDERSON ROA",         cedula:"1020777056", tipo:"Directo",   modalidad:"Terreno", rol:"Brigadista"},
