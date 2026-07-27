@@ -629,7 +629,13 @@ function aplicarSesion() {
     document.querySelectorAll('.ter-tab').forEach(t => t.style.display = 'none');
   }
   sessionStorage.setItem('rappi_sesion', JSON.stringify(sesion));
-  renderTabla();
+  // Si empleados ya están cargados (venía de modo visor), solo re-renderizar
+  // Si no, cargar desde el servidor
+  if(empleados.length > 0) {
+    renderTabla();
+  } else {
+    cargarEmpleados();
+  }
 }
 
 // ── CARGA DE DATOS ────────────────────────────────────────────
@@ -737,10 +743,9 @@ function renderTabla() {
         inner = `<div class="c-add">+</div>`;
       }
       // Clic: si hay modo copia activo, pegar; si no, abrir modal
+      // Usar función dispatch que evalúa modoCopia/modoVisor en tiempo real
       var clickHandler = modoVisor ? "" :
-        (modoCopia
-          ? "pegarEnCelda('" + esCed + "','" + fecha + "')"
-          : "abrirModal('" + esCed + "','" + e.nombre.replace(/'/g,"&#39;") + "','" + fecha + "','" + d.getDate() + "/" + (d.getMonth()+1) + "')");
+        "handleCeldaClick('" + esCed + "','" + fecha + "','" + e.nombre.replace(/'/g,"&#39;") + "','" + d.getDate() + "/" + (d.getMonth()+1) + "')";
       var hoyRing = hoy ? ' hoy-ring' : '';
       var modoClass = modoCopia ? ' destino-target' : (modoVisor ? ' celda-visor' : '');
       tb += '<td class="td-dia">'
@@ -754,6 +759,18 @@ function renderTabla() {
     tb += `<td class="td-resumen"><span class="resumen-pill">${resumen}</span></td></tr>`;
   });
   document.getElementById('tbody').innerHTML = tb;
+}
+
+
+// ── DISPATCH DE CLIC EN CELDA ─────────────────────────────
+// Evalúa en tiempo real si estamos en modo copia, visor o edición normal
+function handleCeldaClick(cedula, fecha, nombre, fechaCorta) {
+  if(modoVisor) return;
+  if(modoCopia) {
+    pegarEnCelda(cedula, fecha);
+    return;
+  }
+  abrirModal(cedula, nombre, fecha, fechaCorta);
 }
 
 // ── MODAL ─────────────────────────────────────────────────────
