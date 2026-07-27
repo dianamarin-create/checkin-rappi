@@ -274,6 +274,7 @@
       <button class="logout-btn" onclick="cerrarSesion()">Salir</button>
     </div>
     <span class="save-status" id="save-status"></span>
+    <button class="btn btn-rappi" id="btn-editar" onclick="abrirLogin()" style="display:flex;align-items:center;gap:6px;">✏️ Editar</button>
     <button class="btn btn-rappi" id="btn-guardar" onclick="guardarTodo()" disabled style="display:none;">Guardar cambios</button>
   </div>
 </div>
@@ -647,15 +648,14 @@ async function cargarEmpleados() {
 // ── RENDER ────────────────────────────────────────────────────
 function renderTabla() {
   const semana  = getSemana();
-  // Filtrar por rol, activo y territorio de sesión
-  const terFiltro = sesion && sesion.territorio !== 'ADMIN' ? sesion.territorio : territorioActivo;
+  // En modo visor o sin sesion: mostrar todos sin filtro de territorio
+  const terFiltro = (sesion && sesion.territorio && sesion.territorio !== 'ADMIN')
+    ? sesion.territorio : territorioActivo;
   const emp = empleados.filter(e => {
     if(e.rol !== rolActivo) return false;
     if(e.activo === 'NO') return false;
-    if(terFiltro && terFiltro !== 'Todos') {
+    if(!modoVisor && terFiltro && terFiltro !== 'Todos') {
       const eTer = (e.territorio || '').toUpperCase().trim();
-      // Si el colaborador no tiene territorio asignado, lo incluye siempre
-      // Solo excluir si tiene territorio Y no coincide con el filtro
       if(eTer && eTer !== terFiltro.toUpperCase()) return false;
     }
     return true;
