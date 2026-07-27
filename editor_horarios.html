@@ -169,8 +169,8 @@
       background:rgba(255,68,27,.04) !important;}
 
     /* ── MODAL DE LOGIN (ya no es pantalla completa) ── */
-    .login-screen{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:999;display:none;align-items:center;justify-content:center;padding:20px;}
-    .login-screen.visible{display:flex;}
+    .login-screen{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:999;display:none !important;align-items:center;justify-content:center;padding:20px;}
+    .login-screen.visible{display:flex !important;}
     .login-card{background:#fff;border-radius:20px;padding:36px 32px;width:100%;
       max-width:400px;box-shadow:0 8px 40px rgba(0,0,0,.12);}
     .login-logo{display:flex;align-items:center;gap:10px;margin-bottom:28px;}
@@ -220,6 +220,7 @@
 
 <!-- TOP BAR -->
 
+<!-- VERSION 2026-07-27 21:59 -->
 <!-- ══ PANTALLA DE LOGIN ══════════════════════════════════ -->
 <div class="login-screen" id="login-screen">
   <div class="login-card">
@@ -579,17 +580,21 @@ function cerrarSesion() {
 
 // Verificar sesión guardada al cargar
 function verificarSesionGuardada() {
-  const saved = sessionStorage.getItem('rappi_sesion');
-  if(saved) {
-    try {
+  // Revisar si hay sesión guardada del navegador
+  try {
+    const saved = sessionStorage.getItem('rappi_sesion');
+    if(saved) {
       sesion = JSON.parse(saved);
       modoVisor = false;
-    } catch(e) {
+    } else {
       sesion = null;
+      modoVisor = true;
     }
+  } catch(e) {
+    sesion = null;
+    modoVisor = true;
   }
-  // Siempre cargar empleados — modo visor si no hay sesión
-  if(!sesion) modoVisor = true;
+  // Cargar empleados siempre — en visor o con sesión
   cargarEmpleados();
 }
 
@@ -646,44 +651,23 @@ function aplicarSesion() {
 // ── CARGA DE DATOS ────────────────────────────────────────────
 async function cargarEmpleados() {
   try {
-    const r = await fetch(`${SCRIPT_URL}?action=getConfig&sheetId=${SHEET_ID}`);
+    const r = await fetch(SCRIPT_URL + '?action=getConfig&sheetId=' + SHEET_ID);
     const d = await r.json();
     if(d.ok && d.empleados && d.empleados.length > 0) {
       empleados = d.empleados;
       horarios  = d.horarios || {};
     } else {
-      // Respuesta ok pero sin empleados — mostrar error
-      console.error('getConfig sin empleados:', JSON.stringify(d));
-      document.getElementById('tbody').innerHTML =
-        '<tr><td colspan="9" style="padding:24px;text-align:center;color:#c62828;font-size:13px;">' +
-        '⚠️ No se pudieron cargar los colaboradores. Verifica que el Apps Script de Horarios ' +
-        'tenga una versión publicada actualizada (Implementar → Administrar implementaciones → Nueva versión).' +
-        '</td></tr>';
-      return;
+      console.error('Sin empleados:', JSON.stringify(d));
     }
   } catch(e) {
-    console.error('Error cargarEmpleados:', e);
-    // Datos de muestra para preview
+    console.error('Error cargarEmpleados:', e.message);
+    // Fallback datos de muestra
     empleados = [
-      {nombre:"ANDERSON ROA",         cedula:"1020777056", tipo:"Directo",   modalidad:"Terreno", rol:"Brigadista"},
-      {nombre:"ANGGY CHACON MORALES", cedula:"1018517750", tipo:"Directo",   modalidad:"Terreno", rol:"Brigadista"},
-      {nombre:"CRISTHIAN CRUZ",       cedula:"80865371",   tipo:"Directo",   modalidad:"Terreno", rol:"Brigadista"},
-      {nombre:"HOLGER CAMPO VITAL",   cedula:"1100627077", tipo:"Directo",   modalidad:"Terreno", rol:"Brigadista"},
-      {nombre:"JUDY MARIN ARBELAEZ",  cedula:"1032452831", tipo:"Directo",   modalidad:"Terreno", rol:"Brigadista"},
-      {nombre:"LEIDY MARTINEZ",       cedula:"1097039893", tipo:"Directo",   modalidad:"Terreno", rol:"Brigadista"},
-      {nombre:"MARTHA ZAPATA",        cedula:"1018436721", tipo:"Directo",   modalidad:"Terreno", rol:"Brigadista"},
-      {nombre:"ANGYE ACOSTA",         cedula:"1067952228", tipo:"Directo",   modalidad:"Remoto",  rol:"Agente"},
-      {nombre:"BREINER SILVERA",      cedula:"1002235983", tipo:"Directo",   modalidad:"Remoto",  rol:"Agente"},
-      {nombre:"SERGIO RAMIREZ",       cedula:"1070925641", tipo:"Directo",   modalidad:"Remoto",  rol:"Supervisor"},
+      {nombre:"ANDERSON ROA", cedula:"1020777056", tipo:"Directo", modalidad:"Terreno", rol:"Brigadista", territorio:"T1"},
+      {nombre:"ANGGY CHACON", cedula:"1018517750", tipo:"Directo", modalidad:"Terreno", rol:"Brigadista", territorio:"T1"},
     ];
-    // Ejemplo de horarios pre-cargados
-    horarios["1020777056"] = {
-      [fmtFecha(getSemana()[0])]: {tipo:"trabajo",entrada:"12:00",salida:"19:00",punto:"CC SANTAFE"},
-      [fmtFecha(getSemana()[1])]: {tipo:"descanso"},
-      [fmtFecha(getSemana()[2])]: {tipo:"trabajo",entrada:"10:00",salida:"18:00",punto:"C.C COLINA"},
-    };
   }
-  // Aplicar UI de sesión si existe (puede venir de sessionStorage)
+  // Aplicar UI de sesión si existe
   if(sesion && !modoVisor) aplicarUISession();
   renderTabla();
 }
