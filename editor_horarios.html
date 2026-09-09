@@ -19,6 +19,7 @@
       --de: #854f0b; --de-bg: #fef6e7;
       --inc: #185fa5; --inc-bg: #e7f2fe;
       --vac: #6a1b9a; --vac-bg: #f3e5f5;
+      --nr: #37474f; --nr-bg: #eceff1;
       --aus: #999; --aus-bg: #f5f5f3;
     }
     *{box-sizing:border-box;margin:0;padding:0;}
@@ -84,6 +85,7 @@
     .celda.descanso{background:var(--de-bg);}
     .celda.inc{background:var(--inc-bg);}
     .celda.vac{background:var(--vac-bg);}
+    .celda.no_rem{background:var(--nr-bg);}
     .celda.sin{background:var(--aus-bg);}
     .celda.hoy-ring{border-color:var(--rappi) !important;}
     .c-hora{font-size:11px;font-weight:500;font-family:'DM Mono',monospace;}
@@ -91,6 +93,7 @@
     .celda.descanso .c-hora{color:var(--de);}
     .celda.inc .c-hora{color:var(--inc);}
     .celda.vac .c-hora{color:var(--vac);}
+    .celda.no_rem .c-hora{color:var(--nr);}
     .celda.sin .c-hora{color:var(--aus);}
     .c-punto{font-size:10px;color:var(--ok);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.8;}
     .c-add{font-size:18px;color:#ccc;}
@@ -115,6 +118,7 @@
     .tipo-btn.sel-descanso{border-color:var(--de);background:var(--de-bg);color:var(--de);}
     .tipo-btn.sel-inc{border-color:var(--inc);background:var(--inc-bg);color:var(--inc);}
     .tipo-btn.sel-vac{border-color:var(--vac);background:var(--vac-bg);color:var(--vac);}
+    .tipo-btn.sel-no_rem{border-color:var(--nr);background:var(--nr-bg);color:var(--nr);}
     .form-trabajo{display:none;}
     .form-trabajo.visible{display:block;}
     .form-row{margin-bottom:12px;}
@@ -138,10 +142,11 @@
 
     /* ── LOADING ── */
     .loading-row td{padding:24px;text-align:center;color:var(--mid);font-size:13px;}
-  
+
     /* ── Modo copia ── */
-    .copy-bar{background:#1a1a1a;border-bottom:1px solid #333;padding:8px 24px;display:none;align-items:center;gap:12px;flex-wrap:wrap;}
-    .copy-bar.visible{display:flex !important;}
+    .copy-bar{background:#1a1a1a;border-bottom:1px solid #333;padding:8px 24px;
+      display:none;align-items:center;gap:12px;flex-wrap:wrap;}
+    .copy-bar.visible{display:flex;}
     .copy-pill{background:#ff441b;color:#fff;font-size:12px;font-weight:500;
       padding:4px 12px;border-radius:20px;white-space:nowrap;}
     .copy-action{padding:6px 14px;border-radius:8px;font-size:12px;cursor:pointer;
@@ -167,99 +172,11 @@
     /* Semana copia overlay */
     .semana-copy-target .celda{border:1.5px dashed #ff441b !important;
       background:rgba(255,68,27,.04) !important;}
-
-    /* ── MODAL DE LOGIN (ya no es pantalla completa) ── */
-    .login-screen{position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:999;display:none !important;align-items:center;justify-content:center;padding:20px;}
-    .login-screen.visible{display:flex !important;}
-    .login-card{background:#fff;border-radius:20px;padding:36px 32px;width:100%;
-      max-width:400px;box-shadow:0 8px 40px rgba(0,0,0,.12);}
-    .login-logo{display:flex;align-items:center;gap:10px;margin-bottom:28px;}
-    .login-logo-icon{width:38px;height:38px;background:var(--rappi);border-radius:10px;
-      display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:700;}
-    .login-logo-txt{font-size:16px;font-weight:600;color:var(--dark);}
-    .login-logo-sub{font-size:12px;color:var(--mid);}
-    .login-title{font-size:20px;font-weight:700;color:var(--dark);margin-bottom:4px;}
-    .login-sub{font-size:13px;color:var(--mid);margin-bottom:24px;}
-    .login-field{margin-bottom:14px;}
-    .login-label{font-size:11px;font-weight:600;color:var(--mid);text-transform:uppercase;
-      letter-spacing:.4px;display:block;margin-bottom:5px;}
-    .login-input{width:100%;padding:11px 14px;border:1.5px solid var(--border);
-      border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;
-      outline:none;color:var(--dark);transition:border-color .15s;}
-    .login-input:focus{border-color:var(--rappi);}
-    .login-btn{width:100%;padding:13px;background:var(--rappi);color:#fff;border:none;
-      border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;
-      font-family:'DM Sans',sans-serif;margin-top:4px;transition:background .15s;}
-    .login-btn:hover{background:#e03a14;}
-    .login-btn:disabled{background:#ccc;cursor:not-allowed;}
-    .login-error{background:#fce8e6;color:#c62828;border-radius:8px;padding:10px 14px;
-      font-size:13px;margin-bottom:14px;display:none;}
-    .login-loading{text-align:center;color:var(--mid);font-size:13px;padding:8px 0;display:none;}
-    /* Usuario logueado badge en topbar */
-    .user-badge{display:flex;align-items:center;gap:8px;color:#ccc;font-size:12px;}
-    .user-ter{padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;}
-    .user-ter-t1{background:#1a56db22;color:#93c5fd;}
-    .user-ter-t2{background:#92400e22;color:#fcd34d;}
-    .user-ter-admin{background:#0f6e5622;color:#6ee7b7;}
-    .logout-btn{padding:4px 10px;border-radius:6px;border:1px solid #333;
-      background:transparent;color:#888;font-size:11px;cursor:pointer;
-      font-family:'DM Sans',sans-serif;}
-    .logout-btn:hover{background:#1a1a1a;color:#fff;}
-
-    /* ── MODO VISOR ── */
-    .modo-visor-bar{background:#1a1a1a;border-bottom:1px solid #333;
-      padding:7px 24px;display:flex;align-items:center;gap:12px;}
-    .modo-visor-bar span{color:#aaa;font-size:12px;}
-    .modo-visor-bar a{color:var(--rappi);font-size:12px;cursor:pointer;
-      text-decoration:none;font-weight:500;}
-    .celda-visor{cursor:default !important;pointer-events:none;}
-    .celda-visor:hover{transform:none !important;border-color:transparent !important;}
 </style>
 </head>
 <body>
 
 <!-- TOP BAR -->
-
-<!-- VERSION 2026-07-27 21:59 -->
-<!-- ══ PANTALLA DE LOGIN ══════════════════════════════════ -->
-<div class="login-screen" id="login-screen">
-  <div class="login-card">
-    <div class="login-logo">
-      <div class="login-logo-icon">R</div>
-      <div>
-        <div class="login-logo-txt">Rappi Operaciones</div>
-        <div class="login-logo-sub">Editor de Horarios</div>
-      </div>
-    </div>
-    <div class="login-title">Iniciar sesión</div>
-    <div class="login-sub">Ingresa tus credenciales para continuar</div>
-    <div class="login-error" id="login-error">Correo o contraseña incorrectos. Intenta de nuevo.</div>
-    <div class="login-loading" id="login-loading">Verificando credenciales...</div>
-    <div class="login-field">
-      <label class="login-label">Correo electrónico</label>
-      <input class="login-input" id="login-correo" type="email"
-        placeholder="tucorreo@gmail.com" autocomplete="email"
-        onkeydown="if(event.key==='Enter')document.getElementById('login-clave').focus()">
-    </div>
-    <div class="login-field">
-      <label class="login-label">Contraseña</label>
-      <input class="login-input" id="login-clave" type="password"
-        placeholder="••••••••" autocomplete="current-password"
-        onkeydown="if(event.key==='Enter')iniciarSesion()">
-    </div>
-    <button class="login-btn" id="login-btn" onclick="iniciarSesion()">Ingresar</button>
-    <button onclick="cerrarModalLogin()" style="width:100%;margin-top:10px;padding:10px;
-      background:none;border:1px solid var(--border);border-radius:10px;font-size:13px;
-      cursor:pointer;color:var(--mid);font-family:'DM Sans',sans-serif;">
-      Cancelar — solo quiero ver
-    </button>
-    <div style="margin-top:16px;text-align:center;font-size:11px;color:var(--mid);">
-      ¿No tienes acceso? Contacta a tu coordinador de operaciones.
-    </div>
-  </div>
-</div>
-
-
 <div class="topbar">
   <div class="topbar-left">
     <div class="logo">R</div>
@@ -267,14 +184,8 @@
     <span class="topbar-sub">Rappi Operaciones</span>
   </div>
   <div class="topbar-right">
-    <div class="user-badge" id="user-badge" style="display:none;">
-      <span id="user-nombre" style="font-size:12px;color:#aaa;"></span>
-      <span class="user-ter" id="user-ter-badge"></span>
-      <button class="logout-btn" onclick="cerrarSesion()">Salir</button>
-    </div>
     <span class="save-status" id="save-status"></span>
-    <button class="btn btn-rappi" id="btn-editar" onclick="abrirLogin()" style="display:flex;align-items:center;gap:6px;">✏️ Editar</button>
-    <button class="btn btn-rappi" id="btn-guardar" onclick="guardarTodo()" disabled style="display:none;">Guardar cambios</button>
+    <button class="btn btn-rappi" id="btn-guardar" onclick="guardarTodo()" disabled>Guardar cambios</button>
   </div>
 </div>
 
@@ -302,6 +213,7 @@
   <div class="leg"><div class="leg-dot" style="background:var(--de-bg);border:1px solid var(--de);"></div>Descanso</div>
   <div class="leg"><div class="leg-dot" style="background:var(--inc-bg);border:1px solid var(--inc);"></div>Incapacidad</div>
   <div class="leg"><div class="leg-dot" style="background:var(--vac-bg);border:1px solid var(--vac);"></div>Vacaciones</div>
+  <div class="leg"><div class="leg-dot" style="background:var(--nr-bg);border:1px solid var(--nr);"></div>No remunerado</div>
   <div class="leg"><div class="leg-dot" style="background:var(--aus-bg);border:1px solid #ddd;"></div>Sin asignar</div>
   <span class="leg-tip">Clic en cualquier celda para editar · Guardar cuando termines</span>
 </div>
@@ -334,16 +246,6 @@
   </div>
 </div>
 
-
-<!-- COPY BAR — aparece al copiar semana o día -->
-<div class="copy-bar" id="copy-bar">
-  <span class="copy-pill">📋 Modo copia</span>
-  <span id="copy-desc" style="color:#ccc;font-size:12px;flex:1;"></span>
-  <button class="copy-action pegar" id="btn-pegar-persona" style="display:none;" onclick="pegarEnPersona()">Pegar en persona →</button>
-  <button class="copy-action pegar" id="btn-pegar-semana"  style="display:none;" onclick="pegarSemanaCompleta()">Pegar en semana siguiente →</button>
-  <button class="copy-action cancelar" onclick="cancelarCopia()">✕ Cancelar</button>
-</div>
-
 <div class="modal-overlay" id="modal" style="display:none;" onclick="if(event.target===this)cerrarModal()">
   <div class="modal">
     <div class="modal-header">
@@ -361,6 +263,7 @@
         <button class="tipo-btn" id="tb-descanso"  onclick="selTipo('descanso')">Descanso</button>
         <button class="tipo-btn" id="tb-inc"       onclick="selTipo('inc')">Incapacidad</button>
         <button class="tipo-btn" id="tb-vac"       onclick="selTipo('vac')">Vacaciones</button>
+        <button class="tipo-btn" id="tb-no_rem"    onclick="selTipo('no_rem')">No remunerado</button>
       </div>
       <div class="form-trabajo" id="form-trabajo">
         <div class="form-row">
@@ -421,16 +324,6 @@
           <select class="form-select" id="inp-punto"></select>
         </div>
       </div>
-      <!-- Justificación — solo visible para Agente y Supervisor -->
-      <div class="form-row" id="row-justificacion" style="display:none;">
-        <span class="form-label">Motivo del ajuste <span style="color:var(--rappi)">*</span></span>
-        <textarea class="form-input" id="inp-justificacion" rows="2"
-          placeholder="Ej: Cambio de turno por solicitud del colaborador, ajuste por incapacidad..."
-          style="resize:vertical;font-family:'DM Sans',sans-serif;font-size:13px;padding:8px 10px;"></textarea>
-        <div style="font-size:11px;color:var(--mid);margin-top:3px;">
-          Este motivo quedará registrado en la hoja de horarios.
-        </div>
-      </div>
     </div>
     <div class="modal-footer">
       <button class="btn-modal-cancel" onclick="cerrarModal()">Cancelar</button>
@@ -443,7 +336,6 @@
 <div class="toast" id="toast"></div>
 
 <script>
-
 
 
 
@@ -469,12 +361,8 @@ const PUNTOS = [
 const DIAS  = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
 const MESES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
 
-let rolActivo        = "Brigadista";
-let territorioActivo = "Todos";
-let semOffset        = 0;
-// ── Sesión ────────────────────────────────────────────────
-let sesion = null; // { correo, nombre, territorio } — null = no autenticado
-
+let rolActivo   = "Brigadista";
+let semOffset   = 0;
 let empleados   = [];
 let horarios    = {}; // {cedula: {fecha: {tipo,entrada,salida,punto}}}
 let cambios     = {}; // cambios pendientes de guardar
@@ -514,187 +402,43 @@ function toast(msg,ok=true) {
   setTimeout(()=>el.className='toast',2500);
 }
 
-
-// ══ AUTENTICACIÓN ═══════════════════════════════════════
-
-async function iniciarSesion() {
-  const correo = document.getElementById('login-correo').value.trim().toLowerCase();
-  const clave  = document.getElementById('login-clave').value.trim();
-  const errEl  = document.getElementById('login-error');
-  const loadEl = document.getElementById('login-loading');
-  const btn    = document.getElementById('login-btn');
-
-  errEl.style.display  = 'none';
-  if(!correo || !clave) {
-    errEl.textContent = 'Ingresa tu correo y contraseña.';
-    errEl.style.display = 'block'; return;
-  }
-
-  btn.disabled = true;
-  loadEl.style.display = 'block';
-
-  try {
-    const url = SCRIPT_URL + '?action=validarAcceso&correo=' +
-                encodeURIComponent(correo) + '&clave=' + encodeURIComponent(clave);
-    const r = await fetch(url);
-    const d = await r.json();
-
-    if(d.ok && d.acceso) {
-      sesion = { correo: d.correo, nombre: d.nombre, territorio: d.territorio.toUpperCase() };
-      // Guardar en sessionStorage para no pedir login al recargar en la misma pestaña
-      sessionStorage.setItem('rappi_sesion', JSON.stringify(sesion));
-      aplicarSesion();
-    } else {
-      errEl.textContent = 'Correo o contraseña incorrectos.';
-      errEl.style.display = 'block';
-    }
-  } catch(e) {
-    errEl.textContent = 'Error de conexión. Verifica tu internet.';
-    errEl.style.display = 'block';
-  }
-
-  btn.disabled = false;
-  loadEl.style.display = 'none';
-}
-
-
-// ── MODO VISOR ────────────────────────────────────────────
-let modoVisor = false;
-
-function mostrarEditor() { if(sesion) aplicarSesion(); }
-
-function cerrarSesion() {
-  sesion = null;
-  modoVisor = true;
-  sessionStorage.removeItem('rappi_sesion');
-  document.getElementById('login-clave').value = '';
-  document.getElementById('login-error').style.display = 'none';
-  document.getElementById('user-badge').style.display = 'none';
-  document.getElementById('btn-editar').style.display = 'flex';
-  document.getElementById('btn-guardar').style.display = 'none';
-  document.getElementById('btn-guardar').disabled = true;
-  territorioActivo = 'Todos';
-  document.querySelectorAll('.ter-tab').forEach(t => t.style.display = '');
-  cambios = {};
-  renderTabla();
-}
-
-// Verificar sesión guardada al cargar
-function verificarSesionGuardada() {
-  // Intentar recuperar sesión guardada
-  try {
-    const saved = sessionStorage.getItem('rappi_sesion');
-    if(saved) {
-      sesion = JSON.parse(saved);
-      modoVisor = false;
-    } else {
-      sesion = null;
-      modoVisor = true;
-    }
-  } catch(e) {
-    sesion = null;
-    modoVisor = true;
-  }
-  // Siempre cargar — en visor o con sesión
-  cargarEmpleados();
-}
-
-function abrirLogin() {
-  document.getElementById('login-screen').classList.add('visible');
-  document.getElementById('login-correo').focus();
-}
-
-function cerrarModalLogin() {
-  document.getElementById('login-screen').classList.remove('visible');
-}
-
-
-// ── APLICAR UI DE SESIÓN (solo interfaz, sin recargar datos) ──
-function aplicarUISession() {
-  if(!sesion) return;
-  modoVisor = false;
-  document.getElementById('login-screen').classList.remove('visible');
-  const badge    = document.getElementById('user-badge');
-  const terBadge = document.getElementById('user-ter-badge');
-  document.getElementById('user-nombre').textContent = sesion.nombre;
-  badge.style.display = 'flex';
-  document.getElementById('btn-editar').style.display = 'none';
-  document.getElementById('btn-guardar').style.display = 'flex';
-  const ter = sesion.territorio;
-  if(ter === 'ADMIN') {
-    terBadge.textContent = 'Admin';
-    terBadge.className = 'user-ter user-ter-admin';
-  } else if(ter === 'T1') {
-    terBadge.textContent = 'T1';
-    terBadge.className = 'user-ter user-ter-t1';
-  } else {
-    terBadge.textContent = 'T2';
-    terBadge.className = 'user-ter user-ter-t2';
-  }
-  if(ter !== 'ADMIN') {
-    territorioActivo = ter;
-    document.querySelectorAll('.ter-tab').forEach(t => t.style.display = 'none');
-  }
-}
-
-function aplicarSesion() {
-  if(!sesion) return;
-  sessionStorage.setItem('rappi_sesion', JSON.stringify(sesion));
-  aplicarUISession();
-  // Si empleados ya cargados, solo re-renderizar; si no, cargar
-  if(empleados.length > 0) {
-    renderTabla();
-  } else {
-    cargarEmpleados();
-  }
-}
-
 // ── CARGA DE DATOS ────────────────────────────────────────────
 async function cargarEmpleados() {
-  document.getElementById('tbody').innerHTML =
-    '<tr><td colspan="9" style="padding:32px;text-align:center;color:#aaa;font-size:13px;">Cargando horarios...</td></tr>';
   try {
-    const url = SCRIPT_URL + '?action=getConfig&sheetId=' + SHEET_ID;
-    const r   = await fetch(url, { redirect: 'follow' });
-    const d   = await r.json();
-    if(d.ok && d.empleados && d.empleados.length > 0) {
+    const r = await fetch(`${SCRIPT_URL}?action=getConfig&sheetId=${SHEET_ID}`);
+    const d = await r.json();
+    if(d.ok) {
       empleados = d.empleados;
       horarios  = d.horarios || {};
-    } else {
-      document.getElementById('tbody').innerHTML =
-        '<tr><td colspan="9" style="padding:32px;text-align:center;color:#c62828;font-size:13px;">' +
-        '⚠️ Sin datos del servidor.</td></tr>';
-      return;
     }
-  } catch(err) {
-    document.getElementById('tbody').innerHTML =
-      '<tr><td colspan="9" style="padding:32px;text-align:center;color:#c62828;font-size:13px;">' +
-      '⚠️ Error de conexión: ' + err.message + '</td></tr>';
-    return;
+  } catch(e) {
+    // Datos de muestra para preview
+    empleados = [
+      {nombre:"ANDERSON ROA",         cedula:"1020777056", tipo:"Directo",   modalidad:"Terreno", rol:"Brigadista"},
+      {nombre:"ANGGY CHACON MORALES", cedula:"1018517750", tipo:"Directo",   modalidad:"Terreno", rol:"Brigadista"},
+      {nombre:"CRISTHIAN CRUZ",       cedula:"80865371",   tipo:"Directo",   modalidad:"Terreno", rol:"Brigadista"},
+      {nombre:"HOLGER CAMPO VITAL",   cedula:"1100627077", tipo:"Directo",   modalidad:"Terreno", rol:"Brigadista"},
+      {nombre:"JUDY MARIN ARBELAEZ",  cedula:"1032452831", tipo:"Directo",   modalidad:"Terreno", rol:"Brigadista"},
+      {nombre:"LEIDY MARTINEZ",       cedula:"1097039893", tipo:"Directo",   modalidad:"Terreno", rol:"Brigadista"},
+      {nombre:"MARTHA ZAPATA",        cedula:"1018436721", tipo:"Directo",   modalidad:"Terreno", rol:"Brigadista"},
+      {nombre:"ANGYE ACOSTA",         cedula:"1067952228", tipo:"Directo",   modalidad:"Remoto",  rol:"Agente"},
+      {nombre:"BREINER SILVERA",      cedula:"1002235983", tipo:"Directo",   modalidad:"Remoto",  rol:"Agente"},
+      {nombre:"SERGIO RAMIREZ",       cedula:"1070925641", tipo:"Directo",   modalidad:"Remoto",  rol:"Supervisor"},
+    ];
+    // Ejemplo de horarios pre-cargados
+    horarios["1020777056"] = {
+      [fmtFecha(getSemana()[0])]: {tipo:"trabajo",entrada:"12:00",salida:"19:00",punto:"CC SANTAFE"},
+      [fmtFecha(getSemana()[1])]: {tipo:"descanso"},
+      [fmtFecha(getSemana()[2])]: {tipo:"trabajo",entrada:"10:00",salida:"18:00",punto:"C.C COLINA"},
+    };
   }
-  if(sesion && !modoVisor) aplicarUISession();
   renderTabla();
 }
 
 // ── RENDER ────────────────────────────────────────────────────
 function renderTabla() {
   const semana  = getSemana();
-  // Filtrar por rol y activo siempre; territorio solo si hay sesión con territorio específico
-  const terFiltro = (sesion && !modoVisor && sesion.territorio && sesion.territorio !== 'ADMIN')
-    ? sesion.territorio
-    : territorioActivo;
-  const emp = empleados.filter(e => {
-    if(e.rol !== rolActivo) return false;
-    if(e.activo === 'NO') return false;
-    // En modo visor: mostrar todos sin filtro de territorio
-    if(modoVisor) return true;
-    // Con sesión: filtrar por territorio si aplica
-    if(terFiltro && terFiltro !== 'Todos') {
-      const eTer = (e.territorio || '').toUpperCase().trim();
-      if(eTer && eTer !== terFiltro.toUpperCase()) return false;
-    }
-    return true;
-  });
+  const emp     = empleados.filter(e => e.rol === rolActivo && e.activo !== "NO");
 
   // Semana label
   const s0=semana[0], s6=semana[6];
@@ -748,18 +492,17 @@ function renderTabla() {
         inner = `<div class="c-hora">INC</div>`;
       } else if(cls==='vac'){
         inner = `<div class="c-hora">VAC</div>`;
+      } else if(cls==='no_rem'){
+        inner = `<div class="c-hora">NR</div>`;
       } else {
         inner = `<div class="c-add">+</div>`;
       }
       // Clic: si hay modo copia activo, pegar; si no, abrir modal
-      // Usar función dispatch que evalúa modoCopia/modoVisor en tiempo real
-      // En modo visor SIN modoCopia: sin acción
-      // En modo visor CON modoCopia: permitir pegar
-      // En modo edición: abrir modal o pegar
-      var clickHandler = (modoVisor && !modoCopia) ? "" :
-        "handleCeldaClick('" + esCed + "','" + fecha + "','" + e.nombre.replace(/'/g,"&#39;") + "','" + d.getDate() + "/" + (d.getMonth()+1) + "')";
+      var clickHandler = modoCopia
+        ? "pegarEnCelda('" + esCed + "','" + fecha + "')"
+        : "abrirModal('" + esCed + "','" + e.nombre.replace(/'/g,"&#39;") + "','" + fecha + "','" + d.getDate() + "/" + (d.getMonth()+1) + "')";
       var hoyRing = hoy ? ' hoy-ring' : '';
-      var modoClass = modoCopia ? ' destino-target' : (modoVisor ? ' celda-visor' : '');
+      var modoClass = modoCopia ? ' destino-target' : '';
       tb += '<td class="td-dia">'
          + '<div class="celda ' + cls + hoyRing + modoClass + '"'
          + ' onclick="' + clickHandler + '"'
@@ -771,18 +514,6 @@ function renderTabla() {
     tb += `<td class="td-resumen"><span class="resumen-pill">${resumen}</span></td></tr>`;
   });
   document.getElementById('tbody').innerHTML = tb;
-}
-
-
-// ── DISPATCH DE CLIC EN CELDA ─────────────────────────────
-// Evalúa en tiempo real si estamos en modo copia, visor o edición normal
-function handleCeldaClick(cedula, fecha, nombre, fechaCorta) {
-  if(modoVisor) return;
-  if(modoCopia) {
-    pegarEnCelda(cedula, fecha);
-    return;
-  }
-  abrirModal(cedula, nombre, fecha, fechaCorta);
 }
 
 // ── MODAL ─────────────────────────────────────────────────────
@@ -808,20 +539,6 @@ function abrirModal(cedula, nombre, fecha, fechaCorta) {
 
   // Mostrar/ocultar punto según rol
   document.getElementById('row-punto').style.display = rolActivo==='Brigadista' ? 'block' : 'none';
-  // Mostrar justificación solo para Agente/Supervisor Y si ya tenía horario asignado
-  const esAgenteOSup = rolActivo === 'Agente' || rolActivo === 'Supervisor';
-  const diaActual = (horarios[cedula] || {})[fecha];
-  const yaTeníaHorario = diaActual && diaActual.tipo && diaActual.tipo !== 'sin';
-  const rowJust = document.getElementById('row-justificacion');
-  if(esAgenteOSup && yaTeníaHorario) {
-    rowJust.style.display = 'block';
-    rowJust.querySelector('span.form-label').innerHTML =
-      'Motivo del ajuste <span style="color:var(--rappi)">*</span>' +
-      '<span style="font-weight:400;color:var(--mid);font-size:10px;margin-left:6px;">— estás modificando un horario existente</span>';
-  } else {
-    rowJust.style.display = 'none';
-  }
-  document.getElementById('inp-justificacion').value = '';
   document.getElementById('modal').style.display = 'flex';
 }
 
@@ -832,7 +549,7 @@ function cerrarModal() {
 
 function selTipo(t) {
   tipoActivo = t;
-  ['trabajo','descanso','inc','vac'].forEach(x => {
+  ['trabajo','descanso','inc','vac','no_rem'].forEach(x => {
     const btn = document.getElementById('tb-'+x);
     btn.className = 'tipo-btn';
     if(x===t) btn.classList.add('sel-'+t);
@@ -847,20 +564,6 @@ function aplicarCelda() {
   if(!horarios[cedula]) horarios[cedula]={};
   if(!cambios[cedula])  cambios[cedula]={};
 
-  // Validar justificación para Agente y Supervisor SOLO si ya tenía horario
-  const esAgenteOSup = rolActivo === 'Agente' || rolActivo === 'Supervisor';
-  const diaExistente = (horarios[cedula] || {})[fecha];
-  const tieneHorarioPrevio = diaExistente && diaExistente.tipo && diaExistente.tipo !== 'sin';
-  let justificacion = '';
-  if(esAgenteOSup && tieneHorarioPrevio) {
-    justificacion = (document.getElementById('inp-justificacion').value || '').trim();
-    if(!justificacion) {
-      toast('Este día ya tiene horario — debes ingresar el motivo del ajuste', false);
-      document.getElementById('inp-justificacion').focus();
-      return;
-    }
-  }
-
   let dia = {tipo: tipoActivo};
   if(tipoActivo==='trabajo'){
     const entrada = document.getElementById('inp-entrada').value;
@@ -870,13 +573,6 @@ function aplicarCelda() {
     dia.entrada = entrada;
     dia.salida  = salida;
     if(rolActivo==='Brigadista') dia.punto = document.getElementById('inp-punto').value;
-  }
-
-  // Incluir justificación y metadata del cambio en el objeto día
-  if(justificacion) {
-    dia.justificacion = justificacion;
-    dia.editadoPor    = sesion ? sesion.nombre : 'Desconocido';
-    dia.editadoTs     = new Date().toLocaleString('es-CO', {timeZone:'America/Bogota'});
   }
 
   horarios[cedula][fecha] = dia;
@@ -904,8 +600,7 @@ async function guardarTodo() {
       action: 'saveHorarios',
       sheetId: SHEET_ID,
       rol: rolActivo,
-      cambios: cambios,
-      editor: sesion ? sesion.nombre : ''
+      cambios: cambios
     });
     await fetch(SCRIPT_URL, {
       method:'POST', body: payload
@@ -925,14 +620,6 @@ async function guardarTodo() {
 }
 
 // ── NAVEGACIÓN ────────────────────────────────────────────────
-function setTerritorio(t) {
-  territorioActivo = t;
-  document.querySelectorAll('.ter-tab').forEach(b => {
-    b.classList.toggle('active', b.textContent === t);
-  });
-  renderTabla();
-}
-
 function setRol(r) {
   rolActivo = r;
   document.querySelectorAll('.rol-tab').forEach(t=>{
@@ -941,49 +628,45 @@ function setRol(r) {
   renderTabla();
 }
 
-function cambiarSemana(d) { semOffset+=d; renderTabla(); if(modoCopia) activarModoCopia(document.getElementById("copy-desc").textContent, document.getElementById("btn-pegar-persona").style.display!=="none", document.getElementById("btn-pegar-semana").style.display!=="none"); }
+function cambiarSemana(d) { semOffset+=d; renderTabla(); }
 function irHoy()          { semOffset=0;  renderTabla(); }
 
 // ══ LÓGICA DE COPIA ════════════════════════════════════
-let modoCopia = null;
-let celdaCtx  = null;
+let modoCopia = null; // { tipo, cedula, fecha, dias, semanaOffset }
+let celdaCtx  = null; // celda del clic derecho
 
+// Abrir menú contextual con clic derecho en celda
 function abrirContextMenu(e, cedula, fecha) {
   e.preventDefault();
   e.stopPropagation();
-  if(modoVisor) return;
   celdaCtx = { cedula, fecha };
+
   const menu = document.getElementById('ctx-menu');
   menu.style.left = Math.min(e.clientX, window.innerWidth  - 220) + 'px';
-  menu.style.top  = Math.min(e.clientY, window.innerHeight - 200) + 'px';
+  menu.style.top  = Math.min(e.clientY, window.innerHeight - 160) + 'px';
   menu.classList.add('visible');
 }
 
+// Cerrar menú al clic fuera
 document.addEventListener('click', () => {
   document.getElementById('ctx-menu').classList.remove('visible');
 });
 
-// ── OPCIÓN 1: COPIAR DÍA ─────────────────────────────────
-// Copia el turno de una celda específica.
-// Para pegar: haz clic en cualquier celda destino.
+// ── COPIAR DÍA ───────────────────────────────────────
 function copiarDia() {
   if(!celdaCtx) return;
   const { cedula, fecha } = celdaCtx;
   const dia = (horarios[cedula]||{})[fecha];
-  if(!dia || dia.tipo === 'sin') { toast('No hay turno para copiar en ese día'); return; }
+  if(!dia || dia.tipo === 'sin') { toast('No hay turno para copiar'); return; }
 
-  modoCopia = { tipo: 'dia', dia: {...dia} };
+  modoCopia = { tipo: 'dia', cedula, fecha, dia: {...dia} };
   const emp = empleados.find(e => e.cedula === cedula);
-  activarModoCopia(
-    '📅 Día ' + fecha + ' de ' + (emp ? emp.nombre.split(' ')[0] : cedula) +
-    ' copiado — haz clic en cualquier celda para pegar',
-    false, false
-  );
+  const desc = 'Copiando día ' + fecha + ' de ' + (emp ? emp.nombre.split(' ')[0] : cedula);
+  activarModoCopia(desc, false, false);
+  toast('Haz clic en cualquier celda para pegar el turno');
 }
 
-// ── OPCIÓN 2: COPIAR SEMANA DE UNA PERSONA ───────────────
-// Copia los 7 días de la semana de una persona.
-// Para pegar: presiona "Pegar en persona" o haz clic en una celda de otra persona.
+// ── COPIAR SEMANA DE UNA PERSONA ─────────────────────
 function copiarSemanaPersona() {
   if(!celdaCtx) return;
   const { cedula } = celdaCtx;
@@ -992,23 +675,19 @@ function copiarSemanaPersona() {
   semana.forEach(d => {
     const f = fmtFecha(d);
     const dia = (horarios[cedula]||{})[f];
-    if(dia && dia.tipo !== 'sin') dias[f] = {...dia};
+    if(dia) dias[f] = {...dia};
   });
 
-  if(Object.keys(dias).length === 0) { toast('Esta persona no tiene horario asignado esta semana'); return; }
+  if(Object.keys(dias).length === 0) { toast('No hay horario esta semana para copiar'); return; }
 
-  modoCopia = { tipo: 'semana_persona', cedula, dias, semanaOffset: semOffset };
+  modoCopia = { tipo: 'semana_persona', cedula, dias, semanaOffset };
   const emp = empleados.find(e => e.cedula === cedula);
-  activarModoCopia(
-    '👤 Semana de ' + (emp ? emp.nombre.split(' ')[0] : cedula) +
-    ' copiada — navega a la semana destino y elige una persona',
-    true, false
-  );
+  const desc = 'Semana de ' + (emp ? emp.nombre.split(' ')[0] : cedula) + ' copiada';
+  activarModoCopia(desc, true, false);
+  toast('Elige "Pegar semana en persona" o haz clic en un nombre de fila');
 }
 
-// ── OPCIÓN 3: COPIAR SEMANA COMPLETA → SEMANA SIGUIENTE ──
-// Copia todos los horarios de todas las personas de la semana actual.
-// Para pegar: presiona "Pegar en semana siguiente".
+// ── COPIAR SEMANA A SEMANA SIGUIENTE (todos) ──────────
 function copiarSemanaATodos() {
   const semana = getSemana();
   const emp = empleados.filter(e => e.rol === rolActivo);
@@ -1019,21 +698,130 @@ function copiarSemanaATodos() {
     semana.forEach(d => {
       const f = fmtFecha(d);
       const dia = (horarios[e.cedula]||{})[f];
-      if(dia && dia.tipo !== 'sin') snapshot[e.cedula][f] = {...dia};
+      if(dia) snapshot[e.cedula][f] = {...dia};
     });
   });
 
-  const totalDias = Object.values(snapshot).reduce((s, p) => s + Object.keys(p).length, 0);
-  if(totalDias === 0) { toast('No hay horarios asignados esta semana'); return; }
-
-  modoCopia = { tipo: 'semana_todos', snapshot, semanaOffset: semOffset };
-  activarModoCopia(
-    '👥 Semana completa de ' + emp.length + ' personas copiada — presiona "Pegar en semana siguiente"',
-    false, true
-  );
+  modoCopia = { tipo: 'semana_todos', snapshot, semanaOffset };
+  activarModoCopia(`Semana completa de ${emp.length} personas copiada`, false, true);
+  toast('Haz clic en "Pegar en semana completa →" para aplicar a la semana siguiente');
 }
 
-// ── BORRAR DÍA ────────────────────────────────────────────
+// ── ACTIVAR MODO COPIA ────────────────────────────────
+function activarModoCopia(desc, mostrarPersona, mostrarSemana) {
+  document.getElementById('copy-bar').classList.add('visible');
+  document.getElementById('copy-desc').textContent = desc;
+  document.getElementById('btn-pegar-persona').style.display = mostrarPersona ? 'block' : 'none';
+  document.getElementById('btn-pegar-semana').style.display  = mostrarSemana  ? 'block' : 'none';
+}
+
+function cancelarCopia() {
+  modoCopia = null;
+  document.getElementById('copy-bar').classList.remove('visible');
+  renderTabla();
+}
+
+// ── PEGAR DÍA O SEMANA EN CELDA ──────────────────────
+function pegarEnCelda(cedula, fecha) {
+  if(!modoCopia) return false;
+
+  if(modoCopia.tipo === 'dia') {
+    // Pegar el día copiado en esta celda
+    if(!horarios[cedula]) horarios[cedula] = {};
+    if(!cambios[cedula])  cambios[cedula]  = {};
+    const nuevoDia = {...modoCopia.dia};
+    horarios[cedula][fecha] = nuevoDia;
+    cambios[cedula][fecha]  = nuevoDia;
+    activarGuardar();
+    toast(`✓ Turno pegado`);
+    renderTabla();
+    return true;
+  }
+
+  if(modoCopia.tipo === 'semana_persona') {
+    // Al hacer clic en una celda, pegar toda la semana de esa persona
+    pegarSemanaEnPersona(cedula);
+    return true;
+  }
+
+  return false;
+}
+
+// ── PEGAR SEMANA EN PERSONA (botón o clic en nombre) ──
+function pegarSemanaEnPersona(cedulaDestino) {
+  if(!modoCopia || modoCopia.tipo !== 'semana_persona') return;
+
+  const semanaOrigen = modoCopia.dias;
+  const semanaActual = getSemana();
+
+  // Mapear fechas origen → fechas destino por posición de día de la semana
+  const fechasOrigen = Object.keys(semanaOrigen).sort();
+
+  // Obtener la semana origen para calcular el desplazamiento
+  const offsetDias = (semOffset - modoCopia.semanaOffset) * 7;
+
+  if(!horarios[cedulaDestino]) horarios[cedulaDestino] = {};
+  if(!cambios[cedulaDestino])  cambios[cedulaDestino]  = {};
+
+  semanaActual.forEach((d, i) => {
+    const fDest = fmtFecha(d);
+    // Buscar el día equivalente en el origen (mismo índice de semana)
+    const fOrigen = fechasOrigen[i];
+    if(fOrigen && semanaOrigen[fOrigen]) {
+      const dia = {...semanaOrigen[fOrigen]};
+      horarios[cedulaDestino][fDest] = dia;
+      cambios[cedulaDestino][fDest]  = dia;
+    }
+  });
+
+  activarGuardar();
+  cancelarCopia();
+  toast('✓ Semana pegada en ' + (empleados.find(e=>e.cedula===cedulaDestino)||{nombre:cedulaDestino}).nombre.split(' ')[0]);
+}
+
+function pegarEnPersona() {
+  var emp = empleados.filter(function(e){ return e.rol === rolActivo; });
+  var lista = emp.map(function(e,i){ return (i+1) + '. ' + e.nombre; });
+  var msg = 'Selecciona la persona (escribe el numero):';
+  for(var i=0; i<lista.length; i++) { msg += ' | ' + lista[i]; }
+  var sel = prompt(msg);
+  if(!sel) return;
+  var idx = parseInt(sel) - 1;
+  if(idx >= 0 && idx < emp.length) {
+    pegarSemanaEnPersona(emp[idx].cedula);
+  }
+}
+
+// ── PEGAR SEMANA COMPLETA (todos → semana siguiente) ──
+function pegarSemanaCompleta() {
+  if(!modoCopia || modoCopia.tipo !== 'semana_todos') return;
+
+  const snapshot = modoCopia.snapshot;
+  const semanaOrigen = obtenerFechasSemana(modoCopia.semanaOffset);
+  const semanaDest   = obtenerFechasSemana(modoCopia.semanaOffset + 1);
+
+  Object.keys(snapshot).forEach(cedula => {
+    if(!horarios[cedula]) horarios[cedula] = {};
+    if(!cambios[cedula])  cambios[cedula]  = {};
+
+    semanaOrigen.forEach((fo, i) => {
+      const fd  = semanaDest[i];
+      const dia = snapshot[cedula][fo];
+      if(dia) {
+        horarios[cedula][fd] = {...dia};
+        cambios[cedula][fd]  = {...dia};
+      }
+    });
+  });
+
+  activarGuardar();
+  // Ir a la semana siguiente para ver el resultado
+  semOffset = modoCopia.semanaOffset + 1;
+  cancelarCopia();
+  toast('✓ Semana copiada a la semana siguiente');
+}
+
+// ── BORRAR DÍA ────────────────────────────────────────
 function borrarDia() {
   if(!celdaCtx) return;
   const { cedula, fecha } = celdaCtx;
@@ -1046,125 +834,7 @@ function borrarDia() {
   toast('Día borrado');
 }
 
-// ── ACTIVAR BARRA DE COPIA ────────────────────────────────
-function activarModoCopia(desc, mostrarPersona, mostrarSemana) {
-  document.getElementById('copy-bar').classList.add('visible');
-  document.getElementById('copy-desc').textContent = desc;
-  document.getElementById('btn-pegar-persona').style.display = mostrarPersona ? 'inline-block' : 'none';
-  document.getElementById('btn-pegar-semana').style.display  = mostrarSemana  ? 'inline-block' : 'none';
-  renderTabla(); // re-renderizar para activar clic en celdas
-}
-
-function cancelarCopia() {
-  modoCopia = null;
-  document.getElementById('copy-bar').classList.remove('visible');
-  renderTabla();
-}
-
-// ── PEGAR AL HACER CLIC EN CELDA ─────────────────────────
-function pegarEnCelda(cedula, fecha) {
-  if(!modoCopia) return false;
-
-  if(modoCopia.tipo === 'dia') {
-    // Pegar el día copiado en esta celda exacta
-    if(!horarios[cedula]) horarios[cedula] = {};
-    if(!cambios[cedula])  cambios[cedula]  = {};
-    horarios[cedula][fecha] = {...modoCopia.dia};
-    cambios[cedula][fecha]  = {...modoCopia.dia};
-    activarGuardar();
-    toast('✓ Turno pegado en ' + fecha);
-    // Mantener modo copia para poder seguir pegando en más celdas
-    renderTabla();
-    return true;
-  }
-
-  if(modoCopia.tipo === 'semana_persona') {
-    // Al hacer clic en cualquier celda de una persona → pegar semana completa en esa persona
-    pegarSemanaEnPersona(cedula);
-    return true;
-  }
-
-  return false;
-}
-
-// ── PEGAR SEMANA EN PERSONA (botón o clic en celda) ───────
-function pegarSemanaEnPersona(cedulaDestino) {
-  if(!modoCopia || modoCopia.tipo !== 'semana_persona') return;
-
-  const semanaOrigen = modoCopia.dias;
-  const semanaActual = getSemana();
-
-  // Mapear por día de la semana (Lun→Lun, Mar→Mar...)
-  const diasOrigen = {};
-  Object.keys(semanaOrigen).forEach(f => {
-    const p = f.split('/');
-    const d = new Date(parseInt(p[2]), parseInt(p[1])-1, parseInt(p[0]));
-    diasOrigen[d.getDay()] = f;
-  });
-
-  if(!horarios[cedulaDestino]) horarios[cedulaDestino] = {};
-  if(!cambios[cedulaDestino])  cambios[cedulaDestino]  = {};
-
-  let pegados = 0;
-  semanaActual.forEach(d => {
-    const fDest   = fmtFecha(d);
-    const fOrigen = diasOrigen[d.getDay()];
-    if(fOrigen && semanaOrigen[fOrigen]) {
-      horarios[cedulaDestino][fDest] = {...semanaOrigen[fOrigen]};
-      cambios[cedulaDestino][fDest]  = {...semanaOrigen[fOrigen]};
-      pegados++;
-    }
-  });
-
-  activarGuardar();
-  const emp = empleados.find(e => e.cedula === cedulaDestino);
-  toast('✓ ' + pegados + ' días pegados en ' + (emp ? emp.nombre.split(' ')[0] : cedulaDestino));
-  cancelarCopia();
-}
-
-function pegarEnPersona() {
-  // Botón "Pegar en persona" — pide elegir de la lista
-  const emp = empleados.filter(e => e.rol === rolActivo);
-  if(emp.length === 0) { toast('No hay personas disponibles'); return; }
-  const lista = emp.map((e,i) => (i+1) + '. ' + e.nombre).join('\n');
-  const sel = prompt('Selecciona la persona (número):\n' + lista);
-  if(!sel) return;
-  const idx = parseInt(sel) - 1;
-  if(idx >= 0 && idx < emp.length) {
-    pegarSemanaEnPersona(emp[idx].cedula);
-  } else {
-    toast('Número inválido', false);
-  }
-}
-
-// ── PEGAR SEMANA COMPLETA → SEMANA SIGUIENTE ──────────────
-function pegarSemanaCompleta() {
-  if(!modoCopia || modoCopia.tipo !== 'semana_todos') return;
-
-  const snapshot     = modoCopia.snapshot;
-  const semanaOrigen = obtenerFechasSemana(modoCopia.semanaOffset);
-  const semanaDest   = obtenerFechasSemana(modoCopia.semanaOffset + 1);
-
-  Object.keys(snapshot).forEach(cedula => {
-    if(!horarios[cedula]) horarios[cedula] = {};
-    if(!cambios[cedula])  cambios[cedula]  = {};
-    semanaOrigen.forEach((fo, i) => {
-      const fd  = semanaDest[i];
-      const dia = snapshot[cedula][fo];
-      if(dia) {
-        horarios[cedula][fd] = {...dia};
-        cambios[cedula][fd]  = {...dia};
-      }
-    });
-  });
-
-  activarGuardar();
-  semOffset = modoCopia.semanaOffset + 1;
-  cancelarCopia();
-  toast('✓ Semana completa copiada a la semana siguiente');
-}
-
-// ── UTILIDADES ────────────────────────────────────────────
+// ── UTILIDADES ────────────────────────────────────────
 function obtenerFechasSemana(offset) {
   const h = new Date();
   const dow = h.getDay();
@@ -1185,8 +855,8 @@ function activarGuardar() {
 // Alerta si hay cambios sin guardar
 window.onbeforeunload = () => Object.keys(cambios).length>0 ? true : undefined;
 
-// Iniciar — verificar sesión primero
-verificarSesionGuardada();
+// Iniciar
+cargarEmpleados();
 
 
 
