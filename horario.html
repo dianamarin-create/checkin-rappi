@@ -3,274 +3,448 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Check-in Rappi</title>
+  <title>Editor de Horarios — Rappi Ops</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
 
+    :root {
+      --rappi: #ff441b;
+      --rappi-soft: #fff2ef;
+      --dark: #111;
+      --mid: #666;
+      --light: #f5f5f3;
+      --border: #e5e5e0;
+      --white: #fff;
+      --ok: #0f6e56; --ok-bg: #e8f7ef;
+      --de: #854f0b; --de-bg: #fef6e7;
+      --inc: #185fa5; --inc-bg: #e7f2fe;
+      --vac: #6a1b9a; --vac-bg: #f3e5f5;
+      --nr: #37474f; --nr-bg: #eceff1;
+      --esp: #c2185b; --esp-bg: #fce4ec;
+      --aus: #999; --aus-bg: #f5f5f3;
+    }
     *{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:sans-serif;background:#f4f4f4;min-height:100vh;
-         display:flex;align-items:flex-start;justify-content:center;padding:16px;}
-    .card{background:#fff;border-radius:16px;padding:24px;width:100%;
-          max-width:420px;box-shadow:0 2px 12px rgba(0,0,0,.08);margin:auto;}
-    .logo{color:#ff441b;font-size:22px;font-weight:800;margin-bottom:2px;}
-    .sub{font-size:13px;color:#888;margin-bottom:20px;}
-    label{font-size:13px;font-weight:600;display:block;margin-bottom:4px;color:#333;}
-    input,select{width:100%;padding:11px 12px;border:1px solid #ddd;
-      border-radius:10px;font-size:15px;margin-bottom:14px;
-      background:#fafafa;color:#111;}
-    input:focus,select:focus{outline:none;border-color:#ff441b;}
-    .gps-box{border-radius:10px;padding:10px 12px;font-size:13px;
-             margin-bottom:14px;display:flex;align-items:center;gap:8px;}
-    .gps-wait{background:#f0f0f0;color:#666;}
-    .gps-ok{background:#e6f4ea;color:#1a7a34;}
-    .gps-bad{background:#fce8e6;color:#c62828;}
-    .dot{width:8px;height:8px;border-radius:50%;background:currentColor;flex-shrink:0;}
-    .foto-area{border:2px dashed #ddd;border-radius:12px;padding:18px;
-               text-align:center;margin-bottom:14px;cursor:pointer;
-               background:#fafafa;transition:border-color .2s;}
-    .foto-area:hover{border-color:#ff441b;}
-    .foto-area p{font-size:12px;color:#888;margin-top:6px;}
-    .foto-icon{font-size:36px;color:#ccc;}
-    #preview{width:100%;border-radius:10px;display:none;margin-top:8px;}
-    #foto-input{display:none;}
-    .foto-ok{border-color:#1a7a34;background:#f0faf3;}
-    button.primary{width:100%;padding:14px;background:#ff441b;color:#fff;
-      border:none;border-radius:10px;font-size:16px;font-weight:700;
-      cursor:pointer;margin-top:4px;}
-    button.primary:disabled{background:#ccc;cursor:not-allowed;}
-    .resultado{margin-top:16px;border-radius:10px;padding:14px;
-               font-size:13px;display:none;line-height:1.7;}
-    .res-ok{background:#e6f4ea;color:#1a7a34;}
-    .res-err{background:#fce8e6;color:#c62828;}
-    .spinner{display:inline-block;width:14px;height:14px;border:2px solid #fff;
-      border-top-color:transparent;border-radius:50%;
-      animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px;}
-    @keyframes spin{to{transform:rotate(360deg);}}
-    .req{color:#ff441b;}
-    .dato-row{display:flex;justify-content:space-between;align-items:center;
-      padding:7px 0;border-bottom:0.5px solid #eee;font-size:13px;}
-    .dato-row .lbl{color:#888;font-size:12px;}
-    .dato-row .val{font-weight:600;color:#111;text-align:right;max-width:60%;}
+    body{font-family:'DM Sans',sans-serif;background:var(--light);color:var(--dark);font-size:14px;}
 
-    body{padding-bottom:74px;}
-    .navbar{position:fixed;bottom:0;left:0;right:0;background:#fff;
-      border-top:1px solid #eee;box-shadow:0 -2px 10px rgba(0,0,0,.07);
-      display:flex;z-index:200;}
-    .nav-btn{flex:1;padding:10px 8px 8px;border:none;background:transparent;
-      cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;
-      border-top:3px solid transparent;transition:all .2s;font-family:sans-serif;}
-    .nav-btn.active{border-top-color:#ff441b;}
-    #panel-horario{display:none;padding:16px;max-width:420px;margin:0 auto;}
-    .h-card{background:#fff;border-radius:16px;padding:18px;
-      box-shadow:0 2px 12px rgba(0,0,0,.08);margin-bottom:12px;}
-    .h-input{width:100%;padding:12px 14px;border:1.5px solid #eee;border-radius:10px;
-      font-size:16px;outline:none;font-family:sans-serif;box-sizing:border-box;transition:border-color .2s;}
-    .h-input:focus{border-color:#ff441b;}
-    .h-dia{border-radius:14px;padding:14px;margin-bottom:8px;}
-    .h-dia.trabajo{background:#e8f7ef;border:1px solid #b2dfcc;}
-    .h-dia.descanso{background:#fef6e7;border:1px solid #f5d99a;}
-    .h-dia.inc{background:#e7f2fe;border:1px solid #b3d4f5;}
-    .h-dia.vac{background:#f3e5f5;border:1px solid #ce93d8;}
-    .h-dia.no_rem{background:#eceff1;border:1px solid #b0bec5;}
-    .h-dia.especial{background:#fce4ec;border:1px solid #f48fb1;}
-    .h-dia.sin{background:#f5f5f3;border:1px solid #e0e0e0;}
-    .h-dia.hoy-ring{outline:2px solid #ff441b;outline-offset:2px;}
-    #turno-inicio, #turno-fin{margin-bottom:0;}
-  </style>
+    /* ── TOP BAR ── */
+    .topbar{background:var(--dark);padding:0 24px;height:52px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+    .topbar-left{display:flex;align-items:center;gap:12px;}
+    .logo{width:30px;height:30px;background:var(--rappi);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:600;}
+    .topbar-title{color:#fff;font-size:14px;font-weight:500;}
+    .topbar-sub{color:#666;font-size:12px;margin-left:4px;}
+    .topbar-right{display:flex;gap:8px;align-items:center;}
+    .btn{padding:6px 14px;border-radius:8px;border:1px solid #333;background:transparent;color:#fff;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+    .btn:hover{background:#1a1a1a;}
+    .btn-rappi{background:var(--rappi);border-color:var(--rappi);color:#fff;}
+    .btn-rappi:hover{background:#e03a14;}
+    .btn-rappi:disabled{background:#555;border-color:#555;cursor:not-allowed;}
+    .save-status{font-size:12px;color:#666;}
+    .save-status.ok{color:#4caf50;}
+    .save-status.err{color:#f44;}
+    .user-chip{display:flex;align-items:center;gap:6px;font-size:12px;color:#ccc;background:#1a1a1a;
+      border-radius:20px;padding:4px 10px 4px 4px;}
+    .user-chip .user-avatar{width:20px;height:20px;border-radius:50%;background:var(--rappi);
+      display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;}
+    .user-chip .user-territorio{color:#888;font-size:10px;}
+    .btn-logout{background:transparent;border:none;color:#888;font-size:11px;cursor:pointer;
+      text-decoration:underline;padding:0;}
+    .btn-logout:hover{color:#ccc;}
+
+    /* ── LOGIN ── */
+    .login-overlay{position:fixed;inset:0;background:var(--dark);z-index:500;
+      display:flex;align-items:center;justify-content:center;padding:20px;}
+    .login-card{background:var(--white);border-radius:16px;width:100%;max-width:340px;
+      padding:28px 26px;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+    .login-logo{width:36px;height:36px;background:var(--rappi);border-radius:9px;display:flex;
+      align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700;margin-bottom:12px;}
+    .login-title{font-size:16px;font-weight:600;color:var(--dark);margin-bottom:4px;}
+    .login-sub{font-size:12px;color:var(--mid);margin-bottom:20px;}
+    .login-row{margin-bottom:12px;}
+    .login-label{font-size:11px;font-weight:500;color:var(--mid);margin-bottom:4px;display:block;
+      text-transform:uppercase;letter-spacing:.3px;}
+    .login-input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;
+      font-family:'DM Sans',sans-serif;font-size:14px;color:var(--dark);outline:none;}
+    .login-input:focus{border-color:var(--rappi);}
+    .login-error{font-size:12px;color:#c62828;margin-bottom:12px;display:none;}
+    .btn-login{width:100%;padding:11px;border-radius:8px;border:none;background:var(--rappi);
+      color:#fff;cursor:pointer;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;}
+    .btn-login:disabled{background:#999;cursor:not-allowed;}
+    .btn-login .spinner{display:inline-block;width:12px;height:12px;border:2px solid #fff;
+      border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;
+      vertical-align:middle;margin-right:6px;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .app-oculta{display:none;}
+    .login-sep{display:flex;align-items:center;gap:10px;margin:16px 0 12px;}
+    .login-sep .linea{flex:1;height:1px;background:var(--border);}
+    .login-sep span{font-size:11px;color:var(--mid);}
+    .btn-solo-lectura{width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);
+      background:transparent;color:var(--mid);cursor:pointer;font-size:13px;
+      font-family:'DM Sans',sans-serif;}
+    .btn-solo-lectura:hover{border-color:#999;color:var(--dark);}
+    .modo-lectura-chip{font-size:12px;color:#ccc;background:#1a1a1a;border-radius:20px;
+      padding:5px 12px;display:flex;align-items:center;gap:8px;}
+    .modo-lectura-chip a{color:#ff8a6b;cursor:pointer;text-decoration:underline;}
+    /* En modo solo lectura, las celdas no se ven clicables */
+    body.solo-lectura .celda{cursor:default;}
+    body.solo-lectura .celda:hover{border-color:transparent;transform:none;}
+    body.solo-lectura .c-add{opacity:.3;}
+
+    /* ── FILTROS ── */
+    .filtros{background:var(--white);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+    .filtro-group{display:flex;align-items:center;gap:8px;}
+    .filtro-label{font-size:12px;color:var(--mid);font-weight:500;}
+    .rol-tabs{display:flex;gap:4px;}
+    .rol-tab{padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;font-size:12px;cursor:pointer;color:var(--mid);font-family:'DM Sans',sans-serif;transition:all .15s;}
+    .rol-tab.active{background:var(--dark);color:#fff;border-color:var(--dark);}
+    .semana-nav{display:flex;align-items:center;gap:8px;margin-left:auto;}
+    .nav-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border);background:var(--white);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--mid);font-size:16px;}
+    .nav-btn:hover{background:var(--light);}
+    .semana-txt{font-size:13px;font-weight:500;color:var(--dark);white-space:nowrap;}
+    .hoy-btn{padding:4px 10px;border-radius:20px;border:1px solid var(--border);background:transparent;font-size:11px;cursor:pointer;color:var(--mid);}
+
+    /* ── LEYENDA ── */
+    .leyenda{padding:8px 24px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;background:var(--white);border-bottom:1px solid var(--border);}
+    .leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--mid);}
+    .leg-dot{width:10px;height:10px;border-radius:3px;}
+    .leg-tip{margin-left:auto;font-size:11px;color:var(--mid);}
+
+    /* ── TABLA ── */
+    .tabla-wrap{overflow-x:auto;padding:16px 24px;}
+    .tabla-inner{background:var(--white);border-radius:12px;border:1px solid var(--border);overflow:hidden;}
+    table{border-collapse:collapse;width:100%;}
+    thead th{padding:10px 8px;font-size:11px;font-weight:500;color:var(--mid);text-align:center;border-bottom:1px solid var(--border);background:var(--light);white-space:nowrap;}
+    thead th.th-nombre{text-align:left;padding-left:16px;min-width:200px;}
+    thead th.th-hoy{color:var(--rappi);}
+    .th-dia-num{font-size:14px;font-weight:600;display:block;color:var(--dark);}
+    .th-dia-num.hoy{color:var(--rappi);}
+    tbody tr{border-bottom:1px solid var(--border);}
+    tbody tr:last-child{border-bottom:none;}
+    tbody tr:hover{background:#fafaf8;}
+    .td-nombre{padding:10px 16px;white-space:nowrap;}
+    .td-nombre-main{font-size:13px;font-weight:500;}
+    .td-nombre-sub{font-size:11px;color:var(--mid);font-family:'DM Mono',monospace;}
+    .td-dia{padding:4px;min-width:88px;}
+
+    /* ── CELDA DE TURNO ── */
+    .celda{border-radius:8px;padding:5px 7px;cursor:pointer;min-height:42px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:1.5px solid transparent;transition:border-color .15s,transform .1s;user-select:none;}
+    .celda:hover{border-color:rgba(0,0,0,.15);transform:scale(1.02);}
+    .celda:active{transform:scale(.98);}
+    .celda.trabajo{background:var(--ok-bg);}
+    .celda.descanso{background:var(--de-bg);}
+    .celda.inc{background:var(--inc-bg);}
+    .celda.vac{background:var(--vac-bg);}
+    .celda.no_rem{background:var(--nr-bg);}
+    .celda.especial{background:var(--esp-bg);}
+    .celda.sin{background:var(--aus-bg);}
+    .celda.hoy-ring{border-color:var(--rappi) !important;}
+    .c-hora{font-size:11px;font-weight:500;font-family:'DM Mono',monospace;}
+    .celda.trabajo .c-hora{color:var(--ok);}
+    .celda.descanso .c-hora{color:var(--de);}
+    .celda.inc .c-hora{color:var(--inc);}
+    .celda.vac .c-hora{color:var(--vac);}
+    .celda.no_rem .c-hora{color:var(--nr);}
+    .celda.especial .c-hora{color:var(--esp);}
+    .celda.sin .c-hora{color:var(--aus);}
+    .celda.especial .c-punto{color:var(--esp);}
+    .c-punto{font-size:10px;color:var(--ok);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.8;}
+    .c-add{font-size:18px;color:#ccc;}
+
+    /* ── RESUMEN SEMANA ── */
+    .td-resumen{padding:4px 8px;text-align:center;}
+    .resumen-pill{background:var(--light);border-radius:20px;padding:3px 8px;font-size:11px;color:var(--mid);font-family:'DM Mono',monospace;white-space:nowrap;}
+
+    /* ── MODAL ── */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;}
+    .modal{background:var(--white);border-radius:16px;width:100%;max-width:400px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.2);}
+    .modal-header{padding:18px 20px 14px;border-bottom:1px solid var(--border);}
+    .modal-header-top{display:flex;justify-content:space-between;align-items:flex-start;}
+    .modal-nombre{font-size:15px;font-weight:600;}
+    .modal-fecha{font-size:12px;color:var(--mid);margin-top:2px;}
+    .modal-close{width:28px;height:28px;border-radius:7px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--mid);}
+    .modal-body{padding:16px 20px;}
+    .tipo-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px;}
+    .tipo-btn{padding:9px 8px;border-radius:8px;border:1.5px solid var(--border);cursor:pointer;text-align:center;font-size:12px;font-weight:500;transition:all .15s;font-family:'DM Sans',sans-serif;color:var(--mid);}
+    .tipo-btn:hover{border-color:#999;}
+    .tipo-btn.sel-trabajo{border-color:var(--ok);background:var(--ok-bg);color:var(--ok);}
+    .tipo-btn.sel-descanso{border-color:var(--de);background:var(--de-bg);color:var(--de);}
+    .tipo-btn.sel-inc{border-color:var(--inc);background:var(--inc-bg);color:var(--inc);}
+    .tipo-btn.sel-vac{border-color:var(--vac);background:var(--vac-bg);color:var(--vac);}
+    .tipo-btn.sel-no_rem{border-color:var(--nr);background:var(--nr-bg);color:var(--nr);}
+    .tipo-btn.sel-especial{border-color:var(--esp);background:var(--esp-bg);color:var(--esp);}
+    .form-trabajo{display:none;}
+    .form-trabajo.visible{display:block;}
+    .form-especial{display:none;}
+    .form-especial.visible{display:block;}
+    .form-row{margin-bottom:12px;}
+    .form-label{font-size:11px;font-weight:500;color:var(--mid);margin-bottom:4px;display:block;text-transform:uppercase;letter-spacing:.3px;}
+    .hora-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .form-input{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-family:'DM Mono',monospace;font-size:13px;color:var(--dark);outline:none;}
+    .form-input:focus{border-color:var(--rappi);}
+    .form-select{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--dark);outline:none;}
+    .form-select:focus{border-color:var(--rappi);}
+    .modal-footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:8px;}
+    .modal-footer button{flex:1;}
+    .btn-modal-cancel{padding:9px;border-radius:8px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--dark);}
+    .btn-modal-ok{padding:9px;border-radius:8px;border:none;background:var(--rappi);color:#fff;cursor:pointer;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;}
+
+    /* ── TOAST ── */
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--dark);color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:300;opacity:0;transition:opacity .3s;pointer-events:none;}
+    .toast.show{opacity:1;}
+
+    /* ── EMPTY ── */
+    .empty{padding:48px;text-align:center;color:var(--mid);font-size:13px;}
+
+    /* ── LOADING ── */
+    .loading-row td{padding:24px;text-align:center;color:var(--mid);font-size:13px;}
+
+    /* ── Modo copia ── */
+    .copy-bar{background:#1a1a1a;border-bottom:1px solid #333;padding:8px 24px;
+      display:none;align-items:center;gap:12px;flex-wrap:wrap;}
+    .copy-bar.visible{display:flex;}
+    .copy-pill{background:#ff441b;color:#fff;font-size:12px;font-weight:500;
+      padding:4px 12px;border-radius:20px;white-space:nowrap;}
+    .copy-action{padding:6px 14px;border-radius:8px;font-size:12px;cursor:pointer;
+      font-family:"DM Sans",sans-serif;font-weight:500;border:none;}
+    .copy-action.pegar{background:#ff441b;color:#fff;}
+    .copy-action.cancelar{background:#333;color:#aaa;}
+    .copy-action:hover{opacity:.85;}
+    /* Celda en modo origen */
+    .celda.origen{border:2px solid #ff441b !important;box-shadow:0 0 0 2px rgba(255,68,27,.2);}
+    /* Celda en modo destino (hover) */
+    .celda.destino-hover{border:2px dashed #ff441b !important;transform:scale(1.05);}
+    /* Celda que puede recibir el pegado mientras el modo copia está activo */
+    .celda.destino-target{cursor:copy;}
+    .celda.destino-target:hover{border:2px dashed #ff441b !important;background:rgba(255,68,27,.06);}
+    /* Menú contextual de copia */
+    .ctx-menu{position:fixed;background:#fff;border-radius:12px;
+      box-shadow:0 8px 24px rgba(0,0,0,.15);border:0.5px solid var(--border);
+      z-index:300;overflow:hidden;min-width:200px;display:none;}
+    .ctx-menu.visible{display:block;}
+    .ctx-item{padding:11px 16px;font-size:13px;cursor:pointer;display:flex;
+      align-items:center;gap:10px;color:var(--dark);border-bottom:0.5px solid var(--border);}
+    .ctx-item:last-child{border-bottom:none;}
+    .ctx-item:hover{background:var(--light);}
+    .ctx-item.danger{color:#c62828;}
+    .ctx-sep{height:1px;background:var(--border);}
+    /* Semana copia overlay */
+    .semana-copy-target .celda{border:1.5px dashed #ff441b !important;
+      background:rgba(255,68,27,.04) !important;}
+</style>
 </head>
 <body>
 
-<!-- ══ PANEL CHECK-IN ══════════════════════════════════ -->
-<div id="panel-checkin">
-<div class="card">
-  <div class="logo"><span style="color:#ff441b;">R</span>appi</div>
-  <p class="sub">Registro de asistencia — Operaciones</p>
-
-  <!-- Modalidad -->
-  <label>Modalidad <span class="req">*</span></label>
-  <select id="modalidad" onchange="actualizarOpciones()">
-    <option value="">— Selecciona modalidad —</option>
-    <option value="Terreno">Terreno</option>
-    <option value="Remoto">Remoto</option>
-  </select>
-
-  <!-- Rol -->
-  <div id="rol-wrap" style="display:none;">
-    <label>Rol <span class="req">*</span></label>
-    <select id="rol" onchange="actualizarPuntos()">
-      <option value="">— Selecciona tu rol —</option>
-    </select>
-  </div>
-
-  <!-- Ciudad -->
-  <div id="ciudad-wrap" style="display:none;">
-    <label>Ciudad <span class="req">*</span></label>
-    <select id="ciudad" onchange="actualizarPuntos()">
-      <option value="">— Selecciona ciudad —</option>
-      <option value="Bogotá">Bogotá</option>
-      <option value="Medellín">Medellín</option>
-      <option value="Cali">Cali</option>
-      <option value="Barranquilla">Barranquilla</option>
-    </select>
-  </div>
-
-  <!-- Punto (solo Terreno Brigadista) -->
-  <div id="punto-wrap" style="display:none;">
-    <label>Punto de trabajo <span class="req">*</span></label>
-    <select id="punto" onchange="actualizarGPS();verificarBoton()">
-      <option value="">— Selecciona tu punto —</option>
-    </select>
-  </div>
-
-  <label>ID Empleado <span class="req">*</span></label>
-  <input type="text" id="id_emp" placeholder="Ej: EMP-0042" autocomplete="off">
-
-  <label>Nombre completo <span class="req">*</span></label>
-  <input type="text" id="nombre" placeholder="Tu nombre completo" autocomplete="name">
-
-  <label>Turno <span class="req">*</span></label>
-  <div style="display:flex;gap:10px;margin-bottom:8px;">
-    <div style="flex:1;">
-      <div style="font-size:12px;color:#666;margin-bottom:4px;">Hora inicio</div>
-      <select id="turno-inicio" onchange="actualizarResumenTurno()">
-        <option value="">-- Inicio --</option>
-        <option value="07:00">07:00 am</option>
-        <option value="08:00">08:00 am</option>
-        <option value="09:00">09:00 am</option>
-        <option value="10:00">10:00 am</option>
-        <option value="11:00">11:00 am</option>
-        <option value="12:00">12:00 pm</option>
-        <option value="13:00">01:00 pm</option>
-        <option value="14:00">02:00 pm</option>
-      </select>
+<!-- ══ LOGIN — ACCESO RESTRINGIDO ══════════════════════ -->
+<div class="login-overlay" id="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">R</div>
+    <div class="login-title">Acceso restringido</div>
+    <div class="login-sub">Ingresa con tu correo de Rappi para editar los horarios.</div>
+    <div class="login-row">
+      <span class="login-label">Correo</span>
+      <input class="login-input" type="email" id="login-correo" placeholder="tu.correo@rappi.com"
+        onkeydown="if(event.key==='Enter') document.getElementById('login-clave').focus()">
     </div>
-    <div style="flex:1;">
-      <div style="font-size:12px;color:#666;margin-bottom:4px;">Hora fin</div>
-      <select id="turno-fin" onchange="actualizarResumenTurno()">
-        <option value="">-- Fin --</option>
-        <option value="15:00">03:00 pm</option>
-        <option value="16:00">04:00 pm</option>
-        <option value="17:00">05:00 pm</option>
-        <option value="18:00">06:00 pm</option>
-        <option value="19:00">07:00 pm</option>
-        <option value="20:00">08:00 pm</option>
-        <option value="21:00">09:00 pm</option>
-        <option value="22:00">10:00 pm</option>
-      </select>
+    <div class="login-row">
+      <span class="login-label">Clave</span>
+      <input class="login-input" type="password" id="login-clave" placeholder="Tu clave"
+        onkeydown="if(event.key==='Enter') intentarLogin()">
     </div>
-  </div>
-  <div id="turno-resumen" style="display:none;background:#f0f4ff;border:1px solid #c7d7f5;
-    border-radius:10px;padding:9px 14px;font-size:13px;color:#1a3a7a;
-    margin-bottom:14px;text-align:center;font-weight:600;"></div>
-  <input type="hidden" id="turno" value="">
-
-  <label>Tipo de registro <span class="req">*</span></label>
-  <select id="tipo_registro">
-    <option value="">— Inicio o fin de turno —</option>
-    <option value="Inicio de turno">Inicio de turno</option>
-    <option value="Fin de turno">Fin de turno</option>
-  </select>
-
-  <div class="gps-box gps-wait" id="gps-box">
-    <div class="dot"></div>
-    <span id="gps-txt">Obteniendo tu ubicación GPS...</span>
-  </div>
-
-  <div id="foto-section">
-  <label>Foto de verificación <span class="req">*</span> &nbsp;<small style="color:#888;font-weight:400;">(solo cámara, no galería)</small></label>
-  <div class="foto-area" id="foto-area" onclick="document.getElementById('foto-input').click()">
-    <div class="foto-icon" id="foto-icon">&#128247;</div>
-    <p id="foto-txt">Toca aquí para abrir la cámara</p>
-    <img id="preview" alt="Vista previa foto">
-  </div>
-  <input type="file" id="foto-input" accept="image/*" capture="environment">
-  </div>
-
-  <button class="primary" id="btn" disabled>Registrar turno</button>
-</div>
-</div>
-
-<!-- ══ PANEL MI HORARIO ════════════════════════════════ -->
-<div id="panel-horario">
-  <div class="h-card">
-    <div style="display:flex;align-items:center;gap:6px;margin-bottom:14px;">
-      <span style="color:#ff441b;font-size:22px;font-weight:800;line-height:1;">R</span>
-      <span style="font-size:15px;font-weight:600;color:#111;">appi</span>
-      <span style="font-size:12px;color:#aaa;margin-left:4px;">Mi horario semanal</span>
-    </div>
-    <div style="font-size:12px;color:#888;font-weight:500;margin-bottom:8px;">Ingresa tu número de cédula</div>
-    <div style="display:flex;gap:8px;">
-      <input class="h-input" type="number" id="ced-horario" inputmode="numeric"
-        placeholder="Ej: 1020777056" oninput="buscarHorario()"
-        style="flex:1;"
-        onkeydown="if(event.key==='Enter') fetchHorario(this.value.trim())">
-      <button onclick="fetchHorario(document.getElementById('ced-horario').value.trim())"
-        style="padding:12px 16px;background:#ff441b;color:#fff;border:none;
-        border-radius:10px;font-size:20px;cursor:pointer;flex-shrink:0;">🔍</button>
-    </div>
-    <div id="h-error" style="font-size:12px;color:#c62828;margin-top:8px;display:none;">
-      Cédula no encontrada. Verifica el número.
-    </div>
-  </div>
-  <div id="h-resultado"></div>
-  <div style="height:20px;"></div>
-</div>
-
-<!-- Modal de confirmación -->
-<div id="modal-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;
-  background:rgba(0,0,0,0.55);z-index:999;align-items:center;justify-content:center;padding:16px;">
-  <div style="background:#fff;border-radius:20px;padding:28px 24px;width:100%;max-width:400px;
-    box-shadow:0 8px 32px rgba(0,0,0,.18);">
-
-    <!-- Header con ícono -->
-    <div style="text-align:center;margin-bottom:20px;">
-      <div id="modal-icono" style="width:64px;height:64px;border-radius:50%;
-        display:flex;align-items:center;justify-content:center;
-        font-size:32px;margin:0 auto 12px;"></div>
-      <div id="modal-titulo" style="font-size:18px;font-weight:700;"></div>
-      <div id="modal-subtitulo" style="font-size:13px;color:#888;margin-top:4px;"></div>
-    </div>
-
-    <!-- Datos del check-in -->
-    <div id="modal-datos" style="background:#f8f8f8;border-radius:12px;
-      padding:14px 16px;margin-bottom:20px;display:none;">
-      <div class="dato-row" id="dato-punto"></div>
-      <div class="dato-row" id="dato-empleado"></div>
-      <div class="dato-row" id="dato-nombre"></div>
-      <div class="dato-row" id="dato-turno"></div>
-      <div class="dato-row" id="dato-tipo"></div>
-      <div class="dato-row" id="dato-modalidad"></div>
-      <div class="dato-row" id="dato-distancia"></div>
-      <div class="dato-row" id="dato-hora" style="border-bottom:none;"></div>
-    </div>
-
-    <!-- Botón cerrar -->
-    <button onclick="cerrarModal()" style="width:100%;padding:13px;
-      background:#ff441b;color:#fff;border:none;border-radius:10px;
-      font-size:15px;font-weight:700;cursor:pointer;">
-      Cerrar
-    </button>
+    <div class="login-error" id="login-error"></div>
+    <button class="btn-login" id="btn-login" onclick="intentarLogin()">Ingresar</button>
+    <div class="login-sep"><div class="linea"></div><span>o</span><div class="linea"></div></div>
+    <button class="btn-solo-lectura" onclick="verSoloLectura()">Ver horarios sin iniciar sesión</button>
   </div>
 </div>
 
+<!-- TOP BAR -->
+<div class="topbar app-oculta" id="app-topbar">
+  <div class="topbar-left">
+    <div class="logo">R</div>
+    <span class="topbar-title">Editor de Horarios</span>
+    <span class="topbar-sub">Rappi Operaciones</span>
+  </div>
+  <div class="topbar-right">
+    <span class="save-status" id="save-status"></span>
+    <button class="btn btn-rappi" id="btn-guardar" onclick="guardarTodo()" disabled>Guardar cambios</button>
+    <div class="user-chip" id="user-chip">
+      <div class="user-avatar" id="user-avatar">?</div>
+      <span id="user-nombre">—</span>
+      <span class="user-territorio" id="user-territorio"></span>
+      <button class="btn-logout" onclick="cerrarSesion()">Salir</button>
+    </div>
+    <div class="modo-lectura-chip app-oculta" id="modo-lectura-chip">
+      👁 Modo solo lectura · <a onclick="cerrarSesion()">Iniciar sesión para editar</a>
+    </div>
+  </div>
+</div>
 
+<!-- BARRA DE MODO COPIA -->
+<div class="copy-bar" id="copy-bar">
+  <span class="copy-pill" id="copy-desc">—</span>
+  <button class="copy-action pegar" id="btn-pegar-persona" style="display:none;" onclick="pegarEnPersona()">Pegar en persona…</button>
+  <button class="copy-action pegar" id="btn-pegar-semana" style="display:none;" onclick="pegarSemanaCompleta()">Pegar en semana completa →</button>
+  <button class="copy-action cancelar" onclick="cancelarCopia()">Cancelar</button>
+</div>
 
-<!-- ══ NAVBAR ══════════════════════════════════════════ -->
-<nav class="navbar">
-  <button class="nav-btn active" id="nb-checkin" onclick="setTab('checkin')">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ff441b" stroke-width="2">
-      <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
-    </svg>
-    <span style="font-size:11px;font-weight:600;color:#ff441b;">Check-in</span>
-  </button>
-  <button class="nav-btn" id="nb-horario" onclick="setTab('horario')">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#aaa" stroke-width="2">
-      <rect x="3" y="4" width="18" height="18" rx="2"/>
-      <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
-      <line x1="3" y1="10" x2="21" y2="10"/>
-    </svg>
-    <span style="font-size:11px;font-weight:600;color:#aaa;">Mi horario</span>
-  </button>
-</nav>
+<!-- FILTROS -->
+<div class="filtros app-oculta" id="app-filtros">
+  <div class="filtro-group">
+    <span class="filtro-label">Rol:</span>
+    <div class="rol-tabs">
+      <button class="rol-tab active" onclick="setRol('Brigadista')">Brigadista</button>
+      <button class="rol-tab" onclick="setRol('Agente')">Agente</button>
+      <button class="rol-tab" onclick="setRol('Supervisor')">Supervisor</button>
+    </div>
+  </div>
+  <div class="semana-nav">
+    <button class="hoy-btn" onclick="irHoy()">Hoy</button>
+    <button class="nav-btn" onclick="cambiarSemana(-1)">‹</button>
+    <span class="semana-txt" id="semana-txt">—</span>
+    <button class="nav-btn" onclick="cambiarSemana(1)">›</button>
+  </div>
+</div>
+
+<!-- LEYENDA -->
+<div class="leyenda app-oculta" id="app-leyenda">
+  <div class="leg"><div class="leg-dot" style="background:var(--ok-bg);border:1px solid var(--ok);"></div>Trabajo</div>
+  <div class="leg"><div class="leg-dot" style="background:var(--de-bg);border:1px solid var(--de);"></div>Descanso</div>
+  <div class="leg"><div class="leg-dot" style="background:var(--inc-bg);border:1px solid var(--inc);"></div>Incapacidad</div>
+  <div class="leg"><div class="leg-dot" style="background:var(--vac-bg);border:1px solid var(--vac);"></div>Vacaciones</div>
+  <div class="leg"><div class="leg-dot" style="background:var(--nr-bg);border:1px solid var(--nr);"></div>No remunerado</div>
+  <div class="leg"><div class="leg-dot" style="background:var(--esp-bg);border:1px solid var(--esp);"></div>Día especial</div>
+  <div class="leg"><div class="leg-dot" style="background:var(--aus-bg);border:1px solid #ddd;"></div>Sin asignar</div>
+  <span class="leg-tip" id="leg-tip">Clic en cualquier celda para editar · Guardar cuando termines</span>
+</div>
+
+<!-- TABLA -->
+<div class="tabla-wrap app-oculta" id="app-tabla">
+  <div class="tabla-inner">
+    <table>
+      <thead id="thead"></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- MODAL -->
+<!-- Menú contextual -->
+<div class="ctx-menu" id="ctx-menu">
+  <div class="ctx-item" onclick="copiarDia()">
+    <span>📋</span> Copiar este día
+  </div>
+  <div class="ctx-item" onclick="copiarSemanaPersona()">
+    <span>📅</span> Copiar semana de esta persona
+  </div>
+  <div class="ctx-item" onclick="copiarSemanaATodos()">
+    <span>👥</span> Copiar semana a semana siguiente
+  </div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item danger" onclick="borrarDia()">
+    <span>🗑</span> Borrar este día
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal" style="display:none;" onclick="if(event.target===this)cerrarModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-header-top">
+        <div>
+          <div class="modal-nombre" id="m-nombre">—</div>
+          <div class="modal-fecha" id="m-fecha">—</div>
+        </div>
+        <button class="modal-close" onclick="cerrarModal()">×</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="tipo-grid">
+        <button class="tipo-btn" id="tb-trabajo"   onclick="selTipo('trabajo')">Trabajo</button>
+        <button class="tipo-btn" id="tb-descanso"  onclick="selTipo('descanso')">Descanso</button>
+        <button class="tipo-btn" id="tb-inc"       onclick="selTipo('inc')">Incapacidad</button>
+        <button class="tipo-btn" id="tb-vac"       onclick="selTipo('vac')">Vacaciones</button>
+        <button class="tipo-btn" id="tb-no_rem"    onclick="selTipo('no_rem')">No remunerado</button>
+        <button class="tipo-btn" id="tb-especial"  onclick="selTipo('especial')">Día especial</button>
+      </div>
+      <div class="form-especial" id="form-especial">
+        <div class="form-row">
+          <span class="form-label">Tipo de día especial</span>
+          <select class="form-select" id="inp-especial">
+            <option value="">-- Selecciona --</option>
+            <option value="Cumpleaños">Cumpleaños</option>
+            <option value="Día de la familia">Día de la familia</option>
+            <option value="Off votaciones 4 horas">Off votaciones 4 horas</option>
+            <option value="Día bicicleta">Día bicicleta</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-trabajo" id="form-trabajo">
+        <div class="form-row">
+          <span class="form-label">Horario</span>
+          <div class="hora-row">
+            <div>
+              <span class="form-label">Entrada</span>
+              <select class="form-select" id="inp-entrada">
+                <option value="">-- Entrada --</option>
+                <option value="05:00">05:00am</option>
+<option value="06:00">06:00am</option>
+<option value="07:00">07:00am</option>
+<option value="08:00">08:00am</option>
+<option value="09:00">09:00am</option>
+<option value="10:00">10:00am</option>
+<option value="11:00">11:00am</option>
+<option value="12:00">12:00pm</option>
+<option value="13:00">13:00pm</option>
+<option value="14:00">14:00pm</option>
+<option value="15:00">15:00pm</option>
+<option value="16:00">16:00pm</option>
+<option value="17:00">17:00pm</option>
+<option value="18:00">18:00pm</option>
+<option value="19:00">19:00pm</option>
+<option value="20:00">20:00pm</option>
+<option value="21:00">21:00pm</option>
+<option value="22:00">22:00pm</option>
+              </select>
+            </div>
+            <div>
+              <span class="form-label">Salida</span>
+              <select class="form-select" id="inp-salida">
+                <option value="">-- Salida --</option>
+                <option value="06:00">06:00am</option>
+<option value="07:00">07:00am</option>
+<option value="08:00">08:00am</option>
+<option value="09:00">09:00am</option>
+<option value="10:00">10:00am</option>
+<option value="11:00">11:00am</option>
+<option value="12:00">12:00pm</option>
+<option value="13:00">13:00pm</option>
+<option value="14:00">14:00pm</option>
+<option value="15:00">15:00pm</option>
+<option value="16:00">16:00pm</option>
+<option value="17:00">17:00pm</option>
+<option value="18:00">18:00pm</option>
+<option value="19:00">19:00pm</option>
+<option value="20:00">20:00pm</option>
+<option value="21:00">21:00pm</option>
+<option value="22:00">22:00pm</option>
+<option value="23:00">23:00pm</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="form-row" id="row-punto" style="display:none;">
+          <span class="form-label">Punto asignado</span>
+          <select class="form-select" id="inp-punto"></select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-modal-cancel" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn-modal-ok" onclick="aplicarCelda()">Aplicar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
 
 <script>
 
@@ -278,675 +452,673 @@
 
 
 
+// ══════════════════════════════════════════════════════════════
+// CONFIGURACIÓN — edita estas 2 líneas
+// ══════════════════════════════════════════════════════════════
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyhfiHTeXuOntLqzeapmRy7M_-TuiZvAcDqdXo_EGpapBgjpPce1-Dq-ksjYHPACOMN4Q/exec";
+const SHEET_ID   = "11ZXfVvR9u1085RzOwg5JBO9YBIGiiufduGXtKRmv9Gw";
+// ══════════════════════════════════════════════════════════════
 
+const PUNTOS = [
+  "C.C CAFAM FLORESTA","C.C CENTRO MAYOR","C.C COLINA","C.C ECO PLAZA MOSQUERA",
+  "C.C FONTANAR CHIA","C.C GRAN PLAZA BOSA","C.C HAYUELOS","C.C SALITRE",
+  "C.C UNICENTRO","CC MERCURIO SOACHA","CC PALATINO","CC PASEO VILLA EL RIO",
+  "CC SANTAFE","City Parking Cra 12 # 93-43","EXITO COLINA","HUB 63",
+  "Jumbo - Santa Ana","LUGANO","Mc donalds 125","Muncher 61","SALVIO 93",
+  "WOK MUSEO NACIONAL","WOK PLAZA CENTRAL","WOK SALITRE","WOK TITAN",
+  "CC VIVA ENVIGADO - MEDELLIN","CC MOLINOS - MEDELLIN","HUB CALI","CC CHIPICHAPE - CALI"
+];
 
+const DIAS  = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+const MESES = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
 
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx5Yr3K0KuRJwAIYGyXdSR0gqpcge1qWN6aD-v-VQfAhvKhl5YyiF6KH9FZV7cLbNZY/exec";
+let rolActivo   = "Brigadista";
+let semOffset   = 0;
+let empleados   = [];
+let horarios    = {}; // {cedula: {fecha: {tipo,entrada,salida,punto}}}
+let cambios     = {}; // cambios pendientes de guardar
+let celdaActiva = null;
+let tipoActivo  = "trabajo";
 
+// ── SESIÓN (acceso restringido) ────────────────────────────────
+let sesionCorreo     = null;
+let sesionClave      = null;
+let sesionNombre     = null;
+let sesionTerritorio = null;
+let soloLectura      = false; // true = puede ver todos los horarios pero no editar ni guardar
 
-
-
-// ══ CONFIGURACIÓN ══════════════════════════════════════════
-; // ← tu URL
-
-const PUNTOS = {
-  // ⚠ Verifica cada coordenada en Google Maps antes de usar en producción
-  // Abre maps.google.com, busca el lugar, clic derecho → copiar coordenadas
-  "C.C CAFAM FLORESTA":          { lat: 4.687087,  lon: -74.073431, r: 150 },
-  "Pruebas":                     { lat: 4.5718,  lon: -74.1449, r: 200 },
-  "Centro Cartagena":            { lat: 10.3997,  lon: -75.5144,  r: 999999 },
-  "HUB CALI": { lat: 3.468583, lon: -76.529113, r: 100 },
-  "CC CHIPICHAPE - CALI": { lat: 3.475073, lon: -76.527851, r: 150 },
-  "CC VIVA ENVIGADO - MEDELLIN": { lat: 6.176464, lon: -75.590931, r: 150 },
-  "CC MOLINOS - MEDELLIN": { lat: 6.233694, lon: -75.603667, r: 150 },
-  "C.C CENTRO MAYOR":            { lat: 4.593011,  lon: -74.125198, r: 150 },
-  "C.C COLINA":                  { lat: 4.731697,  lon: -74.066628, r: 150 },
-  "C.C ECO PLAZA MOSQUERA":      { lat: 4.7069,  lon: -74.2294, r: 150 },
-  "C.C FONTANAR CHIA":           { lat: 4.88349,  lon: -74.035892, r: 150 },
-  "C.C GRAN PLAZA BOSA":         { lat: 4.6089,  lon: -74.1712, r: 150 },
-  "C.C HAYUELOS":                { lat: 4.663163,  lon: -74.130534, r: 150 },
-  "C.C SALITRE":                 { lat: 4.6579,  lon: -74.1052, r: 150 },
-  "C.C UNICENTRO":               { lat: 4.70268,  lon: -74.041992, r: 150 },
-  "CC MERCURIO SOACHA":          { lat: 4.5782,  lon: -74.2156, r: 150 },
-  "CC PALATINO":                 { lat: 4.715724,  lon: -74.029248, r: 150 },
-  "CC PASEO VILLA EL RIO":       { lat: 4.5771,  lon: -74.1342, r: 150 },
-  "CC SANTAFE":                  { lat: 4.7633,  lon: -74.0464, r: 150 },
-  "City Parking Cra 12 # 93-43": { lat: 4.675855,  lon: -74.049004, r: 100 },
-  "EXITO COLINA":                { lat: 4.7512,  lon: -74.0758, r: 150 },
-  "HUB 63":                      { lat: 4.650447, lon: -74.067104, r: 100 },
-  "Jumbo - Santa Ana":           { lat: 4.6904,  lon: -74.0368, r: 150 },
-  "LUGANO":                      { lat: 4.642092,  lon: -74.075374, r: 150 },
-  "Mc donalds 125":              { lat: 4.70535,  lon: -74.053216, r: 100 },
-  "Muncher 61":                  { lat: 4.6476,  lon: -74.0610, r: 100 },
-  "SALVIO 93":                   { lat: 4.6762,  lon: -74.0487, r: 100 },
-  "WOK MUSEO NACIONAL":          { lat: 4.6158,  lon: -74.0680, r: 100 },
-  "WOK PLAZA CENTRAL":           { lat: 4.631513,  lon: -74.115598, r: 100 },
-  "WOK SALITRE":                 { lat: 4.653668,  lon: -74.110397, r: 100 },
-  "WOK TITAN":                   { lat: 4.694556,  lon: -74.086371, r: 100 },
-};
-// ══════════════════════════════════════════════════════════
-
-let uLat=null, uLon=null, uAcc=null, gpsListo=false, fotoB64=null;
-
-function haversine(a,b,c,d){
-  const R=6371000,r=x=>x*Math.PI/180;
-  const dl=r(c-a),do_=r(d-b);
-  const x=Math.sin(dl/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(do_/2)**2;
-  return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+function initSesion() {
+  let guardada = null;
+  try { guardada = JSON.parse(sessionStorage.getItem('rappi_horarios_sesion') || 'null'); } catch(e) {}
+  if (guardada && guardada.correo && guardada.clave) {
+    verificarLogin(guardada.correo, guardada.clave, true);
+  }
 }
 
-// GPS automático al cargar — con fallback para Oppo/Android
-function iniciarGPS() {
-  if (!navigator.geolocation) {
-    document.getElementById("gps-txt").textContent =
-      "Este navegador no soporta GPS. Usa Chrome.";
+async function intentarLogin() {
+  const correo = document.getElementById('login-correo').value.trim();
+  const clave  = document.getElementById('login-clave').value.trim();
+  const errEl  = document.getElementById('login-error');
+  errEl.style.display = 'none';
+
+  if (!correo || !clave) {
+    errEl.textContent = 'Ingresa tu correo y tu clave.';
+    errEl.style.display = 'block';
     return;
   }
-
-  // Intento 1: GPS preciso (satélite)
-  const t1 = setTimeout(() => {
-    // Si en 8 segundos no respondió, intenta con red (más rápido en Oppo)
-    navigator.geolocation.getCurrentPosition(
-      pos => {
-        if (gpsListo) return; // ya lo obtuvo el intento 1
-        uLat=pos.coords.latitude; uLon=pos.coords.longitude; uAcc=pos.coords.accuracy;
-        gpsListo=true; actualizarGPS(); verificarBoton();
-      },
-      err => {},
-      { enableHighAccuracy: false, timeout: 10000, maximumAge: 30000 }
-    );
-  }, 8000);
-
-  navigator.geolocation.getCurrentPosition(
-    pos => {
-      clearTimeout(t1);
-      uLat=pos.coords.latitude; uLon=pos.coords.longitude; uAcc=pos.coords.accuracy;
-      gpsListo=true; actualizarGPS(); verificarBoton();
-    },
-    err => {
-      clearTimeout(t1);
-      // Intento 2 directo si falla el preciso
-      navigator.geolocation.getCurrentPosition(
-        pos => {
-          uLat=pos.coords.latitude; uLon=pos.coords.longitude; uAcc=pos.coords.accuracy;
-          gpsListo=true; actualizarGPS(); verificarBoton();
-        },
-        err2 => {
-          document.getElementById("gps-box").className = "gps-box gps-bad";
-          document.getElementById("gps-txt").textContent =
-            "No se pudo obtener ubicación. Ve a Ajustes → Apps → Chrome → Permisos → Ubicación → Permitir, luego recarga la página.";
-        },
-        { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
-      );
-    },
-    { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
-  );
+  verificarLogin(correo, clave, false);
 }
 
-iniciarGPS();
-
-// ── PUNTOS POR MODALIDAD/ROL ──────────────────────────────
-const PUNTOS_TERRENO = {
-  "Bogotá": [
-    "C.C CAFAM FLORESTA","C.C CENTRO MAYOR","C.C COLINA","C.C ECO PLAZA MOSQUERA",
-    "C.C FONTANAR CHIA","C.C GRAN PLAZA BOSA","C.C HAYUELOS","C.C SALITRE",
-    "C.C UNICENTRO","CC MERCURIO SOACHA","CC PALATINO","CC PASEO VILLA EL RIO",
-    "CC SANTAFE","City Parking Cra 12 # 93-43","EXITO COLINA","HUB 63",
-    "Jumbo - Santa Ana","LUGANO","Mc donalds 125","Muncher 61","SALVIO 93",
-    "WOK MUSEO NACIONAL","WOK PLAZA CENTRAL","WOK SALITRE","WOK TITAN","Pruebas"
-  ],
-  "Medellín": ["CC VIVA ENVIGADO - MEDELLIN","CC MOLINOS - MEDELLIN"],
-  "Cali":     ["HUB CALI","CC CHIPICHAPE - CALI"],
-  "Barranquilla": [],
-  "Cartagena":    ["Centro Cartagena"]
-};
-
-const ROLES_POR_MODALIDAD = {
-  "Terreno": ["Brigadista","Agente","Supervisor"],
-  "Remoto":  ["Agente","Supervisor"]
-};
-
-function actualizarOpciones() {
-  // Se llama cuando cambia MODALIDAD — resetea todo
-  const modalidad  = document.getElementById("modalidad").value;
-  const rolSel     = document.getElementById("rol");
-  const rolWrap    = document.getElementById("rol-wrap");
-  const ciudadWrap = document.getElementById("ciudad-wrap");
-  const puntoWrap  = document.getElementById("punto-wrap");
-  const puntoSel   = document.getElementById("punto");
-  const fotoSec    = document.getElementById("foto-section");
-
-  rolSel.innerHTML   = '<option value="">— Selecciona tu rol —</option>';
-  puntoSel.innerHTML = '<option value="">— Selecciona tu punto —</option>';
-  document.getElementById("ciudad").value = "";
-  rolWrap.style.display    = "none";
-  ciudadWrap.style.display = "none";
-  puntoWrap.style.display  = "none";
-  if(fotoSec) fotoSec.style.display = "block";
-
-  if(!modalidad){ verificarBoton(); return; }
-
-  // Roles según modalidad
-  rolWrap.style.display = "block";
-  (ROLES_POR_MODALIDAD[modalidad] || []).forEach(r => {
-    const o = document.createElement("option");
-    o.value = r; o.textContent = r; rolSel.appendChild(o);
-  });
-
-  // Ciudad siempre visible
-  ciudadWrap.style.display = "block";
-  actualizarPuntos(); // reconstruir ciudad y puntos según modalidad+rol
-}
-
-function actualizarRol() {
-  // Se llama cuando cambia ROL o CIUDAD
-  actualizarPuntos();
-}
-
-function actualizarPuntos() {
-  const modalidad = document.getElementById("modalidad").value;
-  const rol       = document.getElementById("rol").value;
-  const ciudadSel = document.getElementById("ciudad");
-  const ciudadVal = ciudadSel ? ciudadSel.value : "";
-  const puntoWrap = document.getElementById("punto-wrap");
-  const puntoSel  = document.getElementById("punto");
-  const fotoSec   = document.getElementById("foto-section");
-
-  // ── Actualizar opciones de ciudad según rol ──────────────
-  if(ciudadSel){
-    const ciudadesBase = ["Bogotá","Medellín","Cali","Barranquilla"];
-    const conCartagena = modalidad === "Terreno" && rol === "Brigadista";
-    const ciudadesDisp = conCartagena ? [...ciudadesBase, "Cartagena"] : ciudadesBase;
-
-    // Reconstruir opciones de ciudad manteniendo selección si sigue válida
-    const selActual = ciudadSel.value;
-    ciudadSel.innerHTML = '<option value="">— Selecciona ciudad —</option>';
-    ciudadesDisp.forEach(c => {
-      const o = document.createElement("option");
-      o.value = c; o.textContent = c;
-      if(c === selActual) o.selected = true;
-      ciudadSel.appendChild(o);
-    });
-    // Si la ciudad seleccionada ya no está disponible, limpiar
-    if(selActual && !ciudadesDisp.includes(selActual)){
-      ciudadSel.value = "";
-    }
+async function verificarLogin(correo, clave, silencioso) {
+  const btn   = document.getElementById('btn-login');
+  const errEl = document.getElementById('login-error');
+  if (!silencioso) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Verificando...';
   }
 
-  const ciudadFinal = ciudadSel ? ciudadSel.value : "";
-
-  // ── Limpiar y mostrar puntos ─────────────────────────────
-  puntoSel.innerHTML = '<option value="">— Selecciona tu punto —</option>';
-  puntoWrap.style.display = "none";
-
-  // Puntos solo para Terreno Brigadista con ciudad seleccionada
-  if(modalidad === "Terreno" && rol === "Brigadista" && ciudadFinal){
-    const lista = PUNTOS_TERRENO[ciudadFinal] || [];
-    if(lista.length > 0){
-      lista.forEach(nombre => {
-        const o = document.createElement("option");
-        o.value = nombre; o.textContent = nombre;
-        puntoSel.appendChild(o);
-      });
-      puntoWrap.style.display = "block";
-    }
-  }
-
-  // ── Foto ─────────────────────────────────────────────────
-  const sinFoto = (modalidad === "Remoto") && (rol === "Agente" || rol === "Supervisor");
-  if(fotoSec) fotoSec.style.display = sinFoto ? "none" : "block";
-
-  actualizarGPS();
-  verificarBoton();
-}
-
-
-
-function actualizarRol() {
-  // Se llama cuando cambia ROL o CIUDAD — no resetea el select de rol
-  const modalidad   = document.getElementById("modalidad").value;
-  const rol         = document.getElementById("rol").value;
-  const fotoSection = document.getElementById("foto-section");
-
-  // Foto: ocultar para Remoto Agente y Supervisor
-  const rolSinFoto = (modalidad === "Remoto") && (rol === "Agente" || rol === "Supervisor");
-  if(fotoSection) fotoSection.style.display = rolSinFoto ? "none" : "block";
-
-  actualizarGPS();
-  verificarBoton();
-}
-
-// Rol y ciudad manejan cambios via actualizarRol()
-
-function actualizarGPS(){
-  const modalidad = document.getElementById("modalidad").value;
-  const rol       = document.getElementById("rol") ? document.getElementById("rol").value : "";
-  const box = document.getElementById("gps-box");
-  const txt = document.getElementById("gps-txt");
-  if(!gpsListo){ return; }
-
-  // Terreno Brigadista: validar contra el punto físico
-  if(modalidad === "Terreno" && rol === "Brigadista"){
-    const puntoEl = document.getElementById("punto");
-    const key = puntoEl ? puntoEl.value : "";
-    if(!key){
-      box.className="gps-box gps-wait";
-      txt.textContent="Selecciona tu punto para ver la distancia";
-      return;
-    }
-    const p = PUNTOS[key];
-    if(!p){ return; }
-    const dist = Math.round(haversine(uLat,uLon,p.lat,p.lon));
-    if(dist<=p.r){
-      box.className="gps-box gps-ok";
-      txt.textContent="Estás a "+dist+" m de "+key+" — dentro del rango ✓";
-    } else {
-      box.className="gps-box gps-bad";
-      txt.textContent="Estás a "+dist+" m — fuera del rango ("+p.r+" m) de "+key;
-    }
-    return;
-  }
-
-  // Todos los demás: registrar ciudad
-  const ciudad = document.getElementById("ciudad") ? document.getElementById("ciudad").value : "";
-  if(ciudad){
-    box.className = "gps-box gps-ok";
-    txt.textContent = (modalidad === "Remoto" ? "Remoto" : "Terreno") +
-                      " — " + ciudad + " — ubicación registrada ✓";
-  } else {
-    box.className="gps-box gps-wait";
-    txt.textContent="Selecciona tu ciudad";
-  }
-}
-
-// Foto solo desde cámara
-document.getElementById("foto-input").addEventListener("change",function(){
-  const file=this.files[0];
-  if(!file)return;
-  // Comprimir imagen antes de enviar para evitar base64 truncado
-  const img = new Image();
-  const urlTemp = URL.createObjectURL(file);
-  img.onload = function() {
-    const canvas = document.createElement("canvas");
-    const MAX = 800; // máximo 800px de ancho
-    let w = img.width, h = img.height;
-    if(w > MAX){ h = Math.round(h * MAX / w); w = MAX; }
-    canvas.width = w; canvas.height = h;
-    const ctx = canvas.getContext("2d");
-    ctx.drawImage(img, 0, 0, w, h);
-    fotoB64 = canvas.toDataURL("image/jpeg", 0.7); // calidad 70%
-    URL.revokeObjectURL(urlTemp);
-    const prev=document.getElementById("preview");
-    prev.src=fotoB64; prev.style.display="block";
-    document.getElementById("foto-icon").style.display="none";
-    document.getElementById("foto-txt").textContent="✓ Foto tomada correctamente";
-    document.getElementById("foto-area").classList.add("foto-ok");
-    verificarBoton();
-  };
-  img.src = urlTemp;
-});
-
-function verificarBoton(){
-  const modalidad = document.getElementById("modalidad").value;
-  const rol       = document.getElementById("rol") ? document.getElementById("rol").value : "";
-  const tinicio   = document.getElementById("turno-inicio") ? document.getElementById("turno-inicio").value : "";
-  const tfin      = document.getElementById("turno-fin")    ? document.getElementById("turno-fin").value    : "";
-
-  if(!modalidad || !rol || !tinicio || !tfin){
-    document.getElementById("btn").disabled = true; return;
-  }
-
-  const ciudad   = document.getElementById("ciudad")  ? document.getElementById("ciudad").value  : "";
-  const puntoEl  = document.getElementById("punto");
-  const puntoVal = puntoEl ? puntoEl.value : "";
-
-  let ubicacionOk = false;
-
-  if(modalidad === "Terreno" && rol === "Brigadista"){
-    // Terreno Brigadista: necesita ciudad + punto
-    ubicacionOk = !!ciudad && !!puntoVal && gpsListo;
-  } else {
-    // Todos los demás: solo ciudad
-    ubicacionOk = !!ciudad && gpsListo;
-  }
-
-  // Foto no requerida para Remoto Agente/Supervisor
-  const rolSinFoto = (modalidad === "Remoto") && (rol === "Agente" || rol === "Supervisor");
-  const fotoOk = rolSinFoto ? true : !!fotoB64;
-
-  document.getElementById("btn").disabled = !(ubicacionOk && fotoOk);
-}
-
-document.getElementById("btn").onclick=async()=>{
-  const modalidad = document.getElementById("modalidad").value;
-  const rol       = document.getElementById("rol").value;
-  const id        = document.getElementById("id_emp").value.trim();
-  const nombre    = document.getElementById("nombre").value.trim();
-  const turno     = document.getElementById("turno").value;
-  const tipo_reg  = document.getElementById("tipo_registro").value;
-  const esRemoto  = modalidad === "Remoto";
-
-  const ciudadVal    = document.getElementById("ciudad")  ? document.getElementById("ciudad").value  : "";
-  const puntoTerreno = document.getElementById("punto")   ? document.getElementById("punto").value   : "";
-
-  // Construir nombre del punto según modalidad y rol
-  let punto = "";
-  if(modalidad === "Terreno" && rol === "Brigadista"){
-    punto = puntoTerreno;
-  } else if(esRemoto){
-    punto = ciudadVal + " - REMOTO";
-  } else {
-    punto = ciudadVal + " - " + rol.toUpperCase();
-  }
-
-  if(!modalidad||!rol||!id||!nombre||!turno||!tipo_reg){
-    alert("Completa todos los campos."); return;
-  }
-  if(!ciudadVal){ alert("Selecciona tu ciudad."); return; }
-  if(modalidad === "Terreno" && rol === "Brigadista" && !puntoTerreno){
-    alert("Selecciona tu punto de trabajo."); return;
-  }
-
-  // Foto obligatoria para todos excepto Remoto Agente/Supervisor
-  const rolSinFoto = esRemoto && (rol === "Agente" || rol === "Supervisor");
-  if(!rolSinFoto && !fotoB64){ alert("Toma la foto de verificación."); return; }
-  if(!uLat){ alert("Espera que el GPS termine de cargar."); return; }
-
-  // Distancia: solo Terreno Brigadista valida punto físico
-  let dist = 0, valido = true;
-  if(modalidad === "Terreno" && rol === "Brigadista"){
-    const p = PUNTOS[puntoTerreno];
-    if(!p){ alert("Punto no reconocido."); return; }
-    dist   = Math.round(haversine(uLat,uLon,p.lat,p.lon));
-    valido = dist <= p.r;
-  }
-
-  const btn=document.getElementById("btn");
-  btn.disabled=true;
-  btn.innerHTML='<span class="spinner"></span>Registrando...';
-
-  const payload = JSON.stringify({
-    punto, id_empleado:id, nombre, turno, tipo_registro:tipo_reg,
-    modalidad, rol, ciudad: ciudadVal,
-    lat:uLat, lon:uLon, accuracy:uAcc,
-    distancia:dist, valido,
-    foto: rolSinFoto ? "" : fotoB64
-  });
-
-  let enviado = false;
   try {
-    await fetch(SCRIPT_URL, {
-      method:"POST", mode:"no-cors",
-      headers:{"Content-Type":"text/plain"},
-      body: payload
+    const r = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'verificarAcceso', correo, clave })
     });
-    enviado = true;
-  } catch(e1) {
-    try {
-      await fetch(SCRIPT_URL, { method:"POST", body: payload });
-      enviado = true;
-    } catch(e2) {
+    const d = await r.json();
+
+    if (d.ok) {
+      sesionCorreo     = correo;
+      sesionClave      = clave;
+      sesionNombre     = d.nombre || correo;
+      sesionTerritorio = d.territorio || '';
       try {
-        const mini = JSON.stringify({
-          punto, id_empleado:id, nombre, turno, tipo_registro:tipo_reg,
-          modalidad, rol, ciudad: ciudadVal,
-          lat:uLat, lon:uLon, accuracy:uAcc,
-          distancia:dist, valido, foto:""
-        });
-        await fetch(SCRIPT_URL+"?data="+encodeURIComponent(mini),
-          { method:"GET", mode:"no-cors" });
-        enviado = true;
-      } catch(e3){ enviado = false; }
+        sessionStorage.setItem('rappi_horarios_sesion', JSON.stringify({ correo, clave }));
+      } catch(e) {}
+      mostrarApp();
+    } else {
+      if (silencioso) {
+        // Sesión guardada ya no es válida — pedir login de nuevo
+        try { sessionStorage.removeItem('rappi_horarios_sesion'); } catch(e) {}
+        return;
+      }
+      errEl.textContent = d.error || 'Correo o clave incorrectos.';
+      errEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Ingresar';
+    }
+  } catch(e) {
+    if (!silencioso) {
+      errEl.textContent = 'Error de conexión — intenta de nuevo.';
+      errEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Ingresar';
     }
   }
-
-  btn.disabled=false;
-  btn.textContent="Registrar turno";
-
-  if(enviado){
-    mostrarModal(valido, punto, id, nombre, turno, dist);
-  } else {
-    alert("Error de conexión. Verifica tu internet e intenta de nuevo.");
-  }
-};
-
-function actualizarResumenTurno() {
-  const inicio = document.getElementById("turno-inicio").value;
-  const fin    = document.getElementById("turno-fin").value;
-  const resumen = document.getElementById("turno-resumen");
-  const hidden  = document.getElementById("turno");
-
-  if (inicio && fin) {
-    const turnoStr = inicio + " - " + fin;
-    hidden.value   = turnoStr;
-    resumen.style.display = "block";
-    resumen.textContent   = "Turno: " + turnoStr;
-  } else {
-    hidden.value = "";
-    resumen.style.display = "none";
-  }
-  verificarBoton();
 }
 
+function mostrarApp() {
+  soloLectura = false;
+  document.getElementById('login-overlay').style.display = 'none';
+  document.querySelectorAll('.app-oculta').forEach(el => el.classList.remove('app-oculta'));
+  document.getElementById('modo-lectura-chip').classList.add('app-oculta');
+  document.getElementById('user-chip').style.display   = 'flex';
+  document.getElementById('btn-guardar').style.display = 'inline-block';
+  document.getElementById('save-status').style.display  = 'inline';
+  document.getElementById('user-nombre').textContent     = sesionNombre;
+  document.getElementById('user-territorio').textContent = sesionTerritorio ? ('· ' + sesionTerritorio) : '';
+  document.getElementById('user-avatar').textContent     = (sesionNombre||'?').trim().charAt(0).toUpperCase();
+  document.getElementById('leg-tip').textContent = 'Clic en cualquier celda para editar · Guardar cuando termines';
+  cargarEmpleados();
+}
 
+// ── VER SIN INICIAR SESIÓN (solo lectura, ve todos los horarios) ──
+function verSoloLectura() {
+  soloLectura = true;
+  document.getElementById('login-overlay').style.display = 'none';
+  document.querySelectorAll('.app-oculta').forEach(el => el.classList.remove('app-oculta'));
+  document.getElementById('user-chip').style.display        = 'none';
+  document.getElementById('btn-guardar').style.display       = 'none';
+  document.getElementById('save-status').style.display       = 'none';
+  document.getElementById('modo-lectura-chip').classList.remove('app-oculta');
+  document.body.classList.add('solo-lectura');
+  document.getElementById('leg-tip').textContent = 'Vista de solo lectura — no puedes editar ni guardar cambios';
+  cargarEmpleados();
+}
 
-function mostrarModal(valido, punto, id, nombre, turno, dist) {
-  const overlay = document.getElementById("modal-overlay");
-  overlay.style.display = "flex";
+function cerrarSesion() {
+  if (!soloLectura && Object.keys(cambios).length > 0) {
+    if (!confirm('Tienes cambios sin guardar. ¿Salir de todas formas?')) return;
+  }
+  sesionCorreo = sesionClave = sesionNombre = sesionTerritorio = null;
+  try { sessionStorage.removeItem('rappi_horarios_sesion'); } catch(e) {}
+  location.reload();
+}
 
-  const icono    = document.getElementById("modal-icono");
-  const titulo   = document.getElementById("modal-titulo");
-  const subtitulo= document.getElementById("modal-subtitulo");
-  const datos    = document.getElementById("modal-datos");
+// ── UTILIDADES ────────────────────────────────────────────────
+function getSemana() {
+  const h = new Date();
+  const dow = h.getDay();
+  const lun = new Date(h);
+  lun.setDate(h.getDate() - (dow===0?6:dow-1) + semOffset*7);
+  lun.setHours(0,0,0,0);
+  return Array.from({length:7},(_,i)=>{ const d=new Date(lun); d.setDate(lun.getDate()+i); return d; });
+}
 
-  const ahora = new Date().toLocaleString("es-CO", { timeZone: "America/Bogota" });
+function fmtFecha(d) {
+  return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
+}
 
-  if (valido) {
-    icono.style.background = "#e6f4ea";
-    icono.innerHTML = "✓";
-    icono.style.color = "#1a7a34";
-    icono.style.fontSize = "28px";
-    icono.style.fontWeight = "700";
-    titulo.style.color = "#1a7a34";
-    titulo.textContent = "Check-in registrado";
-    subtitulo.textContent = "Tu asistencia fue confirmada correctamente";
-    datos.style.display = "block";
-  } else {
-    icono.style.background = "#fce8e6";
-    icono.innerHTML = "✗";
-    icono.style.color = "#c62828";
-    icono.style.fontSize = "28px";
-    icono.style.fontWeight = "700";
-    titulo.style.color = "#c62828";
-    titulo.textContent = "Fuera de rango";
-    subtitulo.textContent = "Estás a " + dist + " m — necesitas estar dentro de " + document.getElementById("punto") && PUNTOS[punto] ? PUNTOS[punto].r : 150 + " m";
-    datos.style.display = "none";
+function esHoy(d) {
+  const h=new Date();
+  return d.getDate()===h.getDate()&&d.getMonth()===h.getMonth()&&d.getFullYear()===h.getFullYear();
+}
+
+function calcHoras(entrada,salida) {
+  if(!entrada||!salida) return 0;
+  const [hE,mE]=entrada.split(':').map(Number);
+  const [hS,mS]=salida.split(':').map(Number);
+  return Math.max(0,((hS*60+mS)-(hE*60+mE))/60);
+}
+
+function toast(msg,ok=true) {
+  const el=document.getElementById('toast');
+  el.textContent=msg;
+  el.className='toast show';
+  setTimeout(()=>el.className='toast',2500);
+}
+
+// ── CARGA DE DATOS ────────────────────────────────────────────
+async function cargarEmpleados() {
+  try {
+    const r = await fetch(`${SCRIPT_URL}?action=getConfig&sheetId=${SHEET_ID}`);
+    const d = await r.json();
+    if(d.ok) {
+      empleados = d.empleados;
+      horarios  = d.horarios || {};
+    }
+  } catch(e) {
+    // Datos de muestra para preview
+    empleados = [
+      {nombre:"ANDERSON ROA",         cedula:"1020777056", tipo:"Directo",   modalidad:"Terreno", rol:"Brigadista"},
+      {nombre:"ANGGY CHACON MORALES", cedula:"1018517750", tipo:"Directo",   modalidad:"Terreno", rol:"Brigadista"},
+      {nombre:"CRISTHIAN CRUZ",       cedula:"80865371",   tipo:"Directo",   modalidad:"Terreno", rol:"Brigadista"},
+      {nombre:"HOLGER CAMPO VITAL",   cedula:"1100627077", tipo:"Directo",   modalidad:"Terreno", rol:"Brigadista"},
+      {nombre:"JUDY MARIN ARBELAEZ",  cedula:"1032452831", tipo:"Directo",   modalidad:"Terreno", rol:"Brigadista"},
+      {nombre:"LEIDY MARTINEZ",       cedula:"1097039893", tipo:"Directo",   modalidad:"Terreno", rol:"Brigadista"},
+      {nombre:"MARTHA ZAPATA",        cedula:"1018436721", tipo:"Directo",   modalidad:"Terreno", rol:"Brigadista"},
+      {nombre:"ANGYE ACOSTA",         cedula:"1067952228", tipo:"Directo",   modalidad:"Remoto",  rol:"Agente"},
+      {nombre:"BREINER SILVERA",      cedula:"1002235983", tipo:"Directo",   modalidad:"Remoto",  rol:"Agente"},
+      {nombre:"SERGIO RAMIREZ",       cedula:"1070925641", tipo:"Directo",   modalidad:"Remoto",  rol:"Supervisor"},
+    ];
+    // Ejemplo de horarios pre-cargados
+    horarios["1020777056"] = {
+      [fmtFecha(getSemana()[0])]: {tipo:"trabajo",entrada:"12:00",salida:"19:00",punto:"CC SANTAFE"},
+      [fmtFecha(getSemana()[1])]: {tipo:"descanso"},
+      [fmtFecha(getSemana()[2])]: {tipo:"trabajo",entrada:"10:00",salida:"18:00",punto:"C.C COLINA"},
+    };
+  }
+  renderTabla();
+}
+
+// ── RENDER ────────────────────────────────────────────────────
+function renderTabla() {
+  const semana  = getSemana();
+  const emp     = empleados.filter(e => e.rol === rolActivo && e.activo !== "NO");
+
+  // Semana label
+  const s0=semana[0], s6=semana[6];
+  document.getElementById('semana-txt').textContent =
+    DIAS[1]+" "+s0.getDate()+" "+MESES[s0.getMonth()]+" — "+
+    DIAS[0]+" "+s6.getDate()+" "+MESES[s6.getMonth()]+" "+s6.getFullYear();
+
+  // Thead
+  let th = `<tr><th class="th-nombre">Colaborador</th>`;
+  semana.forEach(d => {
+    const hoy = esHoy(d);
+    th += ('<th class="' + (hoy?'th-hoy':'') + '">'
+          + '<span class="th-dia-num ' + (hoy?'hoy':'') + '">' + d.getDate() + '</span> '
+          + DIAS[d.getDay()] + ' ' + MESES[d.getMonth()]
+          + '</th>');
+  });
+  th += `<th style="min-width:70px;">Semana</th></tr>`;
+  document.getElementById('thead').innerHTML = th;
+
+  // Tbody
+  if(emp.length===0){
+    document.getElementById('tbody').innerHTML =
+      `<tr><td colspan="${semana.length+2}" class="empty">No hay colaboradores activos con rol ${rolActivo}.</td></tr>`;
+    return;
   }
 
-  document.getElementById("dato-punto").innerHTML =
-    '<span class="lbl">Punto</span><span class="val">' + punto + '</span>';
-  document.getElementById("dato-empleado").innerHTML =
-    '<span class="lbl">ID Empleado</span><span class="val">' + id + '</span>';
-  document.getElementById("dato-nombre").innerHTML =
-    '<span class="lbl">Nombre</span><span class="val">' + nombre + '</span>';
-  document.getElementById("dato-turno").innerHTML =
-    '<span class="lbl">Turno</span><span class="val">' + turno + '</span>';
-  document.getElementById("dato-tipo").innerHTML =
-    '<span class="lbl">Registro</span><span class="val">' + (document.getElementById("tipo_registro").value) + '</span>';
-  const _mod = document.getElementById("modalidad").value;
-  const _rol = document.getElementById("rol").value;
-  document.getElementById("dato-modalidad").innerHTML =
-    '<span class="lbl">Modalidad / Rol</span><span class="val">' + _mod + ' — ' + _rol + '</span>';
-  document.getElementById("dato-distancia").innerHTML =
-    '<span class="lbl">Distancia</span><span class="val">' + dist + ' m del punto</span>';
-  document.getElementById("dato-hora").innerHTML =
-    '<span class="lbl">Hora registro</span><span class="val">' + ahora + '</span>';
+  let tb = "";
+  emp.forEach(e => {
+    const esCed = e.cedula;
+    let totalH = 0, diasT = 0;
+    tb += `<tr>
+      <td class="td-nombre">
+        <div class="td-nombre-main">${e.nombre}</div>
+        <div class="td-nombre-sub">${e.cedula} · ${e.modalidad}</div>
+      </td>`;
+    semana.forEach(d => {
+      const fecha = fmtFecha(d);
+      const dia   = (horarios[esCed]||{})[fecha] || {tipo:'sin'};
+      const hoy   = esHoy(d);
+      const cls   = dia.tipo||'sin';
+      let inner   = '';
+      if(cls==='trabajo'){
+        inner = ('<div class="c-hora">' + (dia.entrada||'') + '–' + (dia.salida||'') + '</div>');
+        if(rolActivo==='Brigadista' && dia.punto)
+          inner += `<div class="c-punto">${dia.punto}</div>`;
+        totalH += calcHoras(dia.entrada,dia.salida);
+        diasT++;
+      } else if(cls==='descanso'){
+        inner = `<div class="c-hora">DE</div>`;
+      } else if(cls==='inc'){
+        inner = `<div class="c-hora">INC</div>`;
+      } else if(cls==='vac'){
+        inner = `<div class="c-hora">VAC</div>`;
+      } else if(cls==='no_rem'){
+        inner = `<div class="c-hora">NR</div>`;
+      } else if(cls==='especial'){
+        inner = `<div class="c-hora">ESP</div>`;
+        if(dia.punto) inner += `<div class="c-punto">${dia.punto}</div>`;
+      } else {
+        inner = `<div class="c-add">+</div>`;
+      }
+      // Clic: si hay modo copia activo, pegar; si no, abrir modal
+      var clickHandler = modoCopia
+        ? "pegarEnCelda('" + esCed + "','" + fecha + "')"
+        : "abrirModal('" + esCed + "','" + e.nombre.replace(/'/g,"&#39;") + "','" + fecha + "','" + d.getDate() + "/" + (d.getMonth()+1) + "')";
+      var hoyRing = hoy ? ' hoy-ring' : '';
+      var modoClass = modoCopia ? ' destino-target' : '';
+      tb += '<td class="td-dia">'
+         + '<div class="celda ' + cls + hoyRing + modoClass + '"'
+         + ' onclick="' + clickHandler + '"'
+         + ' oncontextmenu="abrirContextMenu(event,\'' + esCed + '\',\'' + fecha + '\')">'
+         + inner
+         + '</div></td>';
+    });
+    const resumen = diasT>0 ? `${diasT}d · ${Math.round(totalH)}h` : '—';
+    tb += `<td class="td-resumen"><span class="resumen-pill">${resumen}</span></td></tr>`;
+  });
+  document.getElementById('tbody').innerHTML = tb;
+}
+
+// ── MODAL ─────────────────────────────────────────────────────
+function abrirModal(cedula, nombre, fecha, fechaCorta) {
+  if(soloLectura) return; // modo solo lectura: no se puede editar
+  celdaActiva = {cedula, fecha};
+  document.getElementById('m-nombre').textContent = nombre;
+  document.getElementById('m-fecha').textContent  = fechaCorta;
+
+  // Llenar select de puntos
+  const sel = document.getElementById('inp-punto');
+  sel.innerHTML = PUNTOS.map(p=>`<option value="${p}">${p}</option>`).join('');
+
+  // Estado actual
+  const dia = (horarios[cedula]||{})[fecha] || {tipo:'sin'};
+  const tipo = dia.tipo==='sin' ? 'trabajo' : dia.tipo;
+  selTipo(tipo);
+
+  if(tipo==='trabajo'){
+    document.getElementById('inp-entrada').value = dia.entrada||'07:00';
+    document.getElementById('inp-salida').value  = dia.salida||'16:00';
+    if(dia.punto) document.getElementById('inp-punto').value = dia.punto;
+  }
+
+  if(tipo==='especial'){
+    document.getElementById('inp-especial').value = dia.punto||'';
+  }
+
+  // Mostrar/ocultar punto según rol
+  document.getElementById('row-punto').style.display = rolActivo==='Brigadista' ? 'block' : 'none';
+  document.getElementById('modal').style.display = 'flex';
 }
 
 function cerrarModal() {
-  document.getElementById("modal-overlay").style.display = "none";
-  // Limpiar formulario para siguiente registro
-  document.getElementById("modalidad").value = "";
-  if(document.getElementById("ciudad")) document.getElementById("ciudad").value = "";
-  document.getElementById("tipo_registro").value = "";
-  document.getElementById("rol").value = "";
-  document.getElementById("rol-wrap").style.display = "none";
-  document.getElementById("ciudad-wrap").style.display = "none";
-  document.getElementById("punto-wrap").style.display = "none";
-  document.getElementById("turno-resumen").style.display = "none";
-  document.getElementById("turno-inicio").value = "";
-  document.getElementById("turno-fin").value = "";
-  document.getElementById("turno").value = "";
-  document.getElementById("turno-inicio").value = "";
-  document.getElementById("turno-fin").value = "";
-  document.getElementById("turno").value = "";
-  document.getElementById("turno-resumen").style.display = "none";
-  document.getElementById("id_emp").value = "";
-  document.getElementById("nombre").value = "";
-  document.getElementById("turno").value = "";
-  document.getElementById("preview").style.display = "none";
-  document.getElementById("foto-icon").style.display = "block";
-  document.getElementById("foto-txt").textContent = "Toca aquí para abrir la cámara";
-  document.getElementById("foto-area").classList.remove("foto-ok");
-  fotoB64 = null;
-  document.getElementById("btn").disabled = true;
-  document.getElementById("gps-box").className = "gps-box gps-wait";
-  document.getElementById("gps-txt").textContent = "Selecciona tu punto para ver la distancia";
+  document.getElementById('modal').style.display = 'none';
+  celdaActiva = null;
 }
 
-// ══ PESTAÑAS ════════════════════════════════════════════
-function setTab(tab) {
-  document.getElementById('panel-checkin').style.display = tab==='checkin' ? 'block' : 'none';
-  document.getElementById('panel-horario').style.display = tab==='horario' ? 'block' : 'none';
-  document.getElementById('nb-checkin').className = 'nav-btn' + (tab==='checkin' ? ' active' : '');
-  document.getElementById('nb-horario').className = 'nav-btn' + (tab==='horario' ? ' active' : '');
-  if(tab==='horario') setTimeout(function(){document.getElementById('ced-horario').focus();}, 150);
+function selTipo(t) {
+  tipoActivo = t;
+  ['trabajo','descanso','inc','vac','no_rem','especial'].forEach(x => {
+    const btn = document.getElementById('tb-'+x);
+    btn.className = 'tipo-btn';
+    if(x===t) btn.classList.add('sel-'+t);
+  });
+  document.getElementById('form-trabajo').className =
+    'form-trabajo' + (t==='trabajo'?' visible':'');
+  document.getElementById('form-especial').className =
+    'form-especial' + (t==='especial'?' visible':'');
 }
 
-// ══ HORARIO POR CÉDULA ══════════════════════════════════
-var H_URL   = "https://script.google.com/macros/s/AKfycbyhfiHTeXuOntLqzeapmRy7M_-TuiZvAcDqdXo_EGpapBgjpPce1-Dq-ksjYHPACOMN4Q/exec";
-var DIAS_N  = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
-var MESES_N = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+function aplicarCelda() {
+  if(!celdaActiva) return;
+  const {cedula,fecha} = celdaActiva;
+  if(!horarios[cedula]) horarios[cedula]={};
+  if(!cambios[cedula])  cambios[cedula]={};
 
-function getSemanaActual() {
-  var h=new Date(), dow=h.getDay();
-  var lun=new Date(h);
-  lun.setDate(h.getDate()-(dow===0?6:dow-1));
-  lun.setHours(0,0,0,0);
-  return Array.from({length:14},function(_,i){var d=new Date(lun);d.setDate(lun.getDate()+i);return d;});
+  let dia = {tipo: tipoActivo};
+  if(tipoActivo==='trabajo'){
+    const entrada = document.getElementById('inp-entrada').value;
+    const salida  = document.getElementById('inp-salida').value;
+    if(!entrada||!salida){ toast("Ingresa hora de entrada y salida",false); return; }
+    if(entrada>=salida){ toast("La salida debe ser después de la entrada",false); return; }
+    dia.entrada = entrada;
+    dia.salida  = salida;
+    if(rolActivo==='Brigadista') dia.punto = document.getElementById('inp-punto').value;
+  }
+
+  if(tipoActivo==='especial'){
+    const esp = document.getElementById('inp-especial').value;
+    if(!esp){ toast("Selecciona el tipo de día especial",false); return; }
+    dia.punto = esp;
+  }
+
+  horarios[cedula][fecha] = dia;
+  cambios[cedula][fecha]  = dia;
+
+  // Activar botón guardar
+  document.getElementById('btn-guardar').disabled = false;
+  document.getElementById('save-status').textContent = 'Cambios sin guardar';
+  document.getElementById('save-status').className  = 'save-status';
+
+  cerrarModal();
+  renderTabla();
 }
-function fmtF(d){return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();}
-function esHoyH(d){var h=new Date();return d.getDate()===h.getDate()&&d.getMonth()===h.getMonth()&&d.getFullYear()===h.getFullYear();}
 
-var hTimer=null;
-function buscarHorario() {
-  clearTimeout(hTimer);
-  var ced=document.getElementById('ced-horario').value.trim();
-  document.getElementById('h-error').style.display='none';
-  document.getElementById('h-resultado').innerHTML='';
-  if(ced.length<6) return;
-  hTimer=setTimeout(function(){fetchHorario(ced);},600);
-}
+// ── GUARDAR EN SHEET ──────────────────────────────────────────
+async function guardarTodo() {
+  if(Object.keys(cambios).length===0) return;
+  if(!sesionCorreo || !sesionClave){
+    toast('Tu sesión expiró — vuelve a ingresar',false);
+    cerrarSesion();
+    return;
+  }
+  const btn = document.getElementById('btn-guardar');
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+  document.getElementById('save-status').textContent = 'Guardando...';
 
-async function fetchHorario(cedula) {
-  if(!cedula || cedula.length < 6) return;
-  var semana = getSemanaActual();
-  if(!semana || semana.length < 14) { console.error('semana inválida', semana); return; }
-  var ini = fmtF(semana[0]);
-  var fin = fmtF(semana[13]);
-  var res = document.getElementById('h-resultado');
-  res.innerHTML='<div style="text-align:center;padding:24px;color:#888;font-size:13px;">Cargando...</div>';
   try {
-    var url = H_URL+'?action=getHorarioColaborador&cedula='+cedula+'&fechaIni='+ini+'&fechaFin='+fin;
-    var r=await fetch(url, {redirect:'follow'});
-    var text=await r.text();
-    var d=JSON.parse(text);
-    if(!d.ok||!d.horario||d.horario.length===0){
-      res.innerHTML=''; document.getElementById('h-error').style.display='block'; return;
+    const payload = JSON.stringify({
+      action: 'saveHorarios',
+      sheetId: SHEET_ID,
+      rol: rolActivo,
+      cambios: cambios,
+      correo: sesionCorreo,
+      clave: sesionClave
+    });
+    const r = await fetch(SCRIPT_URL, {
+      method:'POST', body: payload
+    });
+    const d = await r.json();
+
+    if(d && d.ok === false){
+      document.getElementById('save-status').textContent = d.error || 'No autorizado';
+      document.getElementById('save-status').className  = 'save-status err';
+      btn.disabled = false;
+      btn.textContent = 'Guardar cambios';
+      toast(d.error || 'No autorizado para guardar — vuelve a ingresar',false);
+      cerrarSesion();
+      return;
     }
-    var diasT=0,totalMin=0,descansos=0;
-    d.horario.forEach(function(dia){
-      if(dia.tipo==='trabajo'){
-        diasT++;
-        if(dia.entrada&&dia.salida){
-          var p1=dia.entrada.split(':'),p2=dia.salida.split(':');
-          totalMin+=(parseInt(p2[0])*60+parseInt(p2[1]))-(parseInt(p1[0])*60+parseInt(p1[1]));
-        }
-      } else if(dia.tipo==='descanso') descansos++;
-    });
-    var out='<div class="h-card">'
-      +'<div style="font-size:12px;color:#888;margin-bottom:10px;">Semana actual + siguiente: '+fmtF(semana[0])+' — '+fmtF(semana[13])+'</div>'
-      +'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">'
-      +'<div style="background:#f5f5f3;border-radius:8px;padding:8px;text-align:center;"><div style="font-size:20px;font-weight:700;">'+diasT+'</div><div style="font-size:11px;color:#888;">Días trabajo</div></div>'
-      +'<div style="background:#f5f5f3;border-radius:8px;padding:8px;text-align:center;"><div style="font-size:20px;font-weight:700;">'+Math.round(totalMin/60)+'h</div><div style="font-size:11px;color:#888;">Horas</div></div>'
-      +'<div style="background:#f5f5f3;border-radius:8px;padding:8px;text-align:center;"><div style="font-size:20px;font-weight:700;">'+descansos+'</div><div style="font-size:11px;color:#888;">Descansos</div></div>'
-      +'</div></div>';
-    d.horario.forEach(function(dia,i){
-      if(i===7){
-        out+='<div style="display:flex;align-items:center;gap:8px;margin:12px 0 8px;">'
-           +'<div style="flex:1;height:1px;background:#e0e0e0;"></div>'
-           +'<span style="font-size:11px;color:#aaa;font-weight:600;letter-spacing:.4px;">SEMANA SIGUIENTE</span>'
-           +'<div style="flex:1;height:1px;background:#e0e0e0;"></div>'
-           +'</div>';
-      }
-      var fecha=semana[i], esH=esHoyH(fecha), tipo=dia.tipo||'sin';
-      var clrMap={'trabajo':'#0f6e56','descanso':'#854f0b','inc':'#185fa5','vac':'#6a1b9a','no_rem':'#37474f','especial':'#c2185b','sin':'#888'};
-      var lblMap={'trabajo':'Trabajo','descanso':'Descanso','inc':'Incapacidad','vac':'Vacaciones','no_rem':'No remunerado','especial':'Día especial','sin':'Sin asignar'};
-      var bgMap={'trabajo':'#0f6e56','descanso':'#854f0b','inc':'#185fa5','vac':'#6a1b9a','no_rem':'#37474f','especial':'#c2185b','sin':'#ccc'};
-      var clr=clrMap[tipo]||'#888', lbl=lblMap[tipo]||'', bg=bgMap[tipo]||'#ccc';
-      var numClr=esH?'#ff441b':clr, dowClr=esH?'#ff441b':'#666';
-      var detalle='';
-      if(tipo==='trabajo') detalle='<div style="font-size:16px;font-weight:700;font-family:monospace;color:'+clr+';margin-top:6px;">'+(dia.entrada||'')+' → '+(dia.salida||'')+'</div>'+(dia.punto?'<div style="font-size:11px;color:'+clr+';opacity:.8;margin-top:2px;">📍 '+dia.punto+'</div>':'');
-      else if(tipo==='especial') detalle='<div style="font-size:13px;color:'+clr+';margin-top:6px;">'+lbl+(dia.punto?' — '+dia.punto:'')+'</div>';
-      else if(tipo!=='sin') detalle='<div style="font-size:13px;color:'+clr+';margin-top:6px;">'+lbl+'</div>';
-      out+='<div class="h-dia '+tipo+(esH?' hoy-ring':'')+'"><div style="display:flex;align-items:center;justify-content:space-between;">'
-          +'<div style="display:flex;align-items:center;gap:12px;"><div style="text-align:center;min-width:34px;">'
-          +'<div style="font-size:22px;font-weight:700;color:'+numClr+';line-height:1;">'+fecha.getDate()+'</div>'
-          +'<div style="font-size:10px;color:#888;text-transform:uppercase;">'+MESES_N[fecha.getMonth()]+'</div></div>'
-          +'<div style="font-size:11px;font-weight:600;color:'+dowClr+';text-transform:uppercase;">'+DIAS_N[fecha.getDay()]+(esH?' · HOY':'')+'</div></div>'
-          +'<span style="background:'+bg+';color:#fff;font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;">'+lbl+'</span>'
-          +'</div>'+detalle+'</div>';
-    });
-    res.innerHTML=out;
+
+    cambios = {};
+    document.getElementById('save-status').textContent = '✓ Guardado';
+    document.getElementById('save-status').className  = 'save-status ok';
+    btn.textContent = 'Guardar cambios';
+    toast('Horario guardado correctamente');
   } catch(e) {
-    res.innerHTML='<div style="text-align:center;padding:20px;color:#c62828;font-size:13px;">Error al cargar. Verifica tu conexión.</div>';
+    document.getElementById('save-status').textContent = 'Error al guardar';
+    document.getElementById('save-status').className  = 'save-status err';
+    btn.disabled = false;
+    btn.textContent = 'Guardar cambios';
+    toast('Error de conexión — intenta de nuevo',false);
   }
 }
 
-
-
-
-// ══ HORARIO POR CÉDULA ══════════════════════════════════
-var DIAS_N  = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
-var MESES_N = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
-
-function getSemanaActual() {
-  var h=new Date(), dow=h.getDay();
-  var lun=new Date(h);
-  lun.setDate(h.getDate()-(dow===0?6:dow-1));
-  lun.setHours(0,0,0,0);
-  return Array.from({length:14},function(_,i){var d=new Date(lun);d.setDate(lun.getDate()+i);return d;});
+// ── NAVEGACIÓN ────────────────────────────────────────────────
+function setRol(r) {
+  rolActivo = r;
+  document.querySelectorAll('.rol-tab').forEach(t=>{
+    t.classList.toggle('active', t.textContent===r);
+  });
+  renderTabla();
 }
-function fmtF(d){return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();}
-function esHoyH(d){var h=new Date();return d.getDate()===h.getDate()&&d.getMonth()===h.getMonth()&&d.getFullYear()===h.getFullYear();}
 
+function cambiarSemana(d) { semOffset+=d; renderTabla(); }
+function irHoy()          { semOffset=0;  renderTabla(); }
 
+// ══ LÓGICA DE COPIA ════════════════════════════════════
+let modoCopia = null; // { tipo, cedula, fecha, dias, semanaOffset }
+let celdaCtx  = null; // celda del clic derecho
 
+// Abrir menú contextual con clic derecho en celda
+function abrirContextMenu(e, cedula, fecha) {
+  e.preventDefault();
+  e.stopPropagation();
+  if(soloLectura) return; // modo solo lectura: sin menú de copiar/borrar
+  celdaCtx = { cedula, fecha };
 
+  const menu = document.getElementById('ctx-menu');
+  menu.style.left = Math.min(e.clientX, window.innerWidth  - 220) + 'px';
+  menu.style.top  = Math.min(e.clientY, window.innerHeight - 160) + 'px';
+  menu.classList.add('visible');
+}
 
+// Cerrar menú al clic fuera
+document.addEventListener('click', () => {
+  document.getElementById('ctx-menu').classList.remove('visible');
+});
 
+// ── COPIAR DÍA ───────────────────────────────────────
+function copiarDia() {
+  if(!celdaCtx) return;
+  const { cedula, fecha } = celdaCtx;
+  const dia = (horarios[cedula]||{})[fecha];
+  if(!dia || dia.tipo === 'sin') { toast('No hay turno para copiar'); return; }
 
+  modoCopia = { tipo: 'dia', cedula, fecha, dia: {...dia} };
+  const emp = empleados.find(e => e.cedula === cedula);
+  const desc = 'Copiando día ' + fecha + ' de ' + (emp ? emp.nombre.split(' ')[0] : cedula);
+  activarModoCopia(desc, false, false);
+  renderTabla();
+  toast('Haz clic en cualquier celda para pegar el turno');
+}
 
-// ══ HORARIO POR CÉDULA ══════════════════════════════════
-var DIAS_N=["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
-var MESES_N=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
-function getSemanaActual(){var h=new Date(),dow=h.getDay(),lun=new Date(h);lun.setDate(h.getDate()-(dow===0?6:dow-1));lun.setHours(0,0,0,0);return Array.from({length:14},function(_,i){var d=new Date(lun);d.setDate(lun.getDate()+i);return d;});}
-function fmtF(d){return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();}
-function esHoyH(d){var h=new Date();return d.getDate()===h.getDate()&&d.getMonth()===h.getMonth()&&d.getFullYear()===h.getFullYear();}
+// ── COPIAR SEMANA DE UNA PERSONA ─────────────────────
+function copiarSemanaPersona() {
+  if(!celdaCtx) return;
+  const { cedula } = celdaCtx;
+  const semana = getSemana();
+  const dias = {};
+  semana.forEach(d => {
+    const f = fmtFecha(d);
+    const dia = (horarios[cedula]||{})[f];
+    if(dia) dias[f] = {...dia};
+  });
 
+  if(Object.keys(dias).length === 0) { toast('No hay horario esta semana para copiar'); return; }
 
+  modoCopia = { tipo: 'semana_persona', cedula, dias, semanaOffset };
+  const emp = empleados.find(e => e.cedula === cedula);
+  const desc = 'Semana de ' + (emp ? emp.nombre.split(' ')[0] : cedula) + ' copiada';
+  activarModoCopia(desc, true, false);
+  renderTabla();
+  toast('Elige "Pegar semana en persona" o haz clic en un nombre de fila');
+}
 
+// ── COPIAR SEMANA A SEMANA SIGUIENTE (todos) ──────────
+function copiarSemanaATodos() {
+  const semana = getSemana();
+  const emp = empleados.filter(e => e.rol === rolActivo);
+  const snapshot = {};
 
+  emp.forEach(e => {
+    snapshot[e.cedula] = {};
+    semana.forEach(d => {
+      const f = fmtFecha(d);
+      const dia = (horarios[e.cedula]||{})[f];
+      if(dia) snapshot[e.cedula][f] = {...dia};
+    });
+  });
+
+  modoCopia = { tipo: 'semana_todos', snapshot, semanaOffset };
+  activarModoCopia(`Semana completa de ${emp.length} personas copiada`, false, true);
+  renderTabla();
+  toast('Haz clic en "Pegar en semana completa →" para aplicar a la semana siguiente');
+}
+
+// ── ACTIVAR MODO COPIA ────────────────────────────────
+function activarModoCopia(desc, mostrarPersona, mostrarSemana) {
+  document.getElementById('copy-bar').classList.add('visible');
+  document.getElementById('copy-desc').textContent = desc;
+  document.getElementById('btn-pegar-persona').style.display = mostrarPersona ? 'block' : 'none';
+  document.getElementById('btn-pegar-semana').style.display  = mostrarSemana  ? 'block' : 'none';
+}
+
+function cancelarCopia() {
+  modoCopia = null;
+  document.getElementById('copy-bar').classList.remove('visible');
+  renderTabla();
+}
+
+// ── PEGAR DÍA O SEMANA EN CELDA ──────────────────────
+function pegarEnCelda(cedula, fecha) {
+  if(!modoCopia) return false;
+
+  if(modoCopia.tipo === 'dia') {
+    // Pegar el día copiado en esta celda
+    if(!horarios[cedula]) horarios[cedula] = {};
+    if(!cambios[cedula])  cambios[cedula]  = {};
+    const nuevoDia = {...modoCopia.dia};
+    horarios[cedula][fecha] = nuevoDia;
+    cambios[cedula][fecha]  = nuevoDia;
+    activarGuardar();
+    toast(`✓ Turno pegado`);
+    renderTabla();
+    return true;
+  }
+
+  if(modoCopia.tipo === 'semana_persona') {
+    // Al hacer clic en una celda, pegar toda la semana de esa persona
+    pegarSemanaEnPersona(cedula);
+    return true;
+  }
+
+  return false;
+}
+
+// ── PEGAR SEMANA EN PERSONA (botón o clic en nombre) ──
+function pegarSemanaEnPersona(cedulaDestino) {
+  if(!modoCopia || modoCopia.tipo !== 'semana_persona') return;
+
+  const semanaOrigen = modoCopia.dias;
+  const semanaActual = getSemana();
+
+  // Mapear fechas origen → fechas destino por posición de día de la semana
+  const fechasOrigen = Object.keys(semanaOrigen).sort();
+
+  // Obtener la semana origen para calcular el desplazamiento
+  const offsetDias = (semOffset - modoCopia.semanaOffset) * 7;
+
+  if(!horarios[cedulaDestino]) horarios[cedulaDestino] = {};
+  if(!cambios[cedulaDestino])  cambios[cedulaDestino]  = {};
+
+  semanaActual.forEach((d, i) => {
+    const fDest = fmtFecha(d);
+    // Buscar el día equivalente en el origen (mismo índice de semana)
+    const fOrigen = fechasOrigen[i];
+    if(fOrigen && semanaOrigen[fOrigen]) {
+      const dia = {...semanaOrigen[fOrigen]};
+      horarios[cedulaDestino][fDest] = dia;
+      cambios[cedulaDestino][fDest]  = dia;
+    }
+  });
+
+  activarGuardar();
+  cancelarCopia();
+  toast('✓ Semana pegada en ' + (empleados.find(e=>e.cedula===cedulaDestino)||{nombre:cedulaDestino}).nombre.split(' ')[0]);
+}
+
+function pegarEnPersona() {
+  var emp = empleados.filter(function(e){ return e.rol === rolActivo; });
+  var lista = emp.map(function(e,i){ return (i+1) + '. ' + e.nombre; });
+  var msg = 'Selecciona la persona (escribe el numero):';
+  for(var i=0; i<lista.length; i++) { msg += ' | ' + lista[i]; }
+  var sel = prompt(msg);
+  if(!sel) return;
+  var idx = parseInt(sel) - 1;
+  if(idx >= 0 && idx < emp.length) {
+    pegarSemanaEnPersona(emp[idx].cedula);
+  }
+}
+
+// ── PEGAR SEMANA COMPLETA (todos → semana siguiente) ──
+function pegarSemanaCompleta() {
+  if(!modoCopia || modoCopia.tipo !== 'semana_todos') return;
+
+  const snapshot = modoCopia.snapshot;
+  const semanaOrigen = obtenerFechasSemana(modoCopia.semanaOffset);
+  const semanaDest   = obtenerFechasSemana(modoCopia.semanaOffset + 1);
+
+  Object.keys(snapshot).forEach(cedula => {
+    if(!horarios[cedula]) horarios[cedula] = {};
+    if(!cambios[cedula])  cambios[cedula]  = {};
+
+    semanaOrigen.forEach((fo, i) => {
+      const fd  = semanaDest[i];
+      const dia = snapshot[cedula][fo];
+      if(dia) {
+        horarios[cedula][fd] = {...dia};
+        cambios[cedula][fd]  = {...dia};
+      }
+    });
+  });
+
+  activarGuardar();
+  // Ir a la semana siguiente para ver el resultado
+  semOffset = modoCopia.semanaOffset + 1;
+  cancelarCopia();
+  toast('✓ Semana copiada a la semana siguiente');
+}
+
+// ── BORRAR DÍA ────────────────────────────────────────
+function borrarDia() {
+  if(!celdaCtx) return;
+  const { cedula, fecha } = celdaCtx;
+  if(!horarios[cedula]) horarios[cedula] = {};
+  if(!cambios[cedula])  cambios[cedula]  = {};
+  horarios[cedula][fecha] = { tipo: 'sin' };
+  cambios[cedula][fecha]  = { tipo: 'sin' };
+  activarGuardar();
+  renderTabla();
+  toast('Día borrado');
+}
+
+// ── UTILIDADES ────────────────────────────────────────
+function obtenerFechasSemana(offset) {
+  const h = new Date();
+  const dow = h.getDay();
+  const lun = new Date(h);
+  lun.setDate(h.getDate() - (dow===0?6:dow-1) + offset*7);
+  lun.setHours(0,0,0,0);
+  return Array.from({length:7},(_,i)=>{
+    const d=new Date(lun); d.setDate(lun.getDate()+i); return fmtFecha(d);
+  });
+}
+
+function activarGuardar() {
+  document.getElementById('btn-guardar').disabled = false;
+  document.getElementById('save-status').textContent = 'Cambios sin guardar';
+  document.getElementById('save-status').className  = 'save-status';
+}
+
+// Alerta si hay cambios sin guardar
+window.onbeforeunload = () => Object.keys(cambios).length>0 ? true : undefined;
+
+// Iniciar — primero pide acceso, y solo si es válido carga el horario
+initSesion();
 
 
 
