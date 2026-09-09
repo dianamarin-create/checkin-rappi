@@ -73,6 +73,20 @@
       vertical-align:middle;margin-right:6px;}
     @keyframes spin{to{transform:rotate(360deg);}}
     .app-oculta{display:none;}
+    .login-sep{display:flex;align-items:center;gap:10px;margin:16px 0 12px;}
+    .login-sep .linea{flex:1;height:1px;background:var(--border);}
+    .login-sep span{font-size:11px;color:var(--mid);}
+    .btn-solo-lectura{width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);
+      background:transparent;color:var(--mid);cursor:pointer;font-size:13px;
+      font-family:'DM Sans',sans-serif;}
+    .btn-solo-lectura:hover{border-color:#999;color:var(--dark);}
+    .modo-lectura-chip{font-size:12px;color:#ccc;background:#1a1a1a;border-radius:20px;
+      padding:5px 12px;display:flex;align-items:center;gap:8px;}
+    .modo-lectura-chip a{color:#ff8a6b;cursor:pointer;text-decoration:underline;}
+    /* En modo solo lectura, las celdas no se ven clicables */
+    body.solo-lectura .celda{cursor:default;}
+    body.solo-lectura .celda:hover{border-color:transparent;transform:none;}
+    body.solo-lectura .c-add{opacity:.3;}
 
     /* ── FILTROS ── */
     .filtros{background:var(--white);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
@@ -227,6 +241,8 @@
     </div>
     <div class="login-error" id="login-error"></div>
     <button class="btn-login" id="btn-login" onclick="intentarLogin()">Ingresar</button>
+    <div class="login-sep"><div class="linea"></div><span>o</span><div class="linea"></div></div>
+    <button class="btn-solo-lectura" onclick="verSoloLectura()">Ver horarios sin iniciar sesión</button>
   </div>
 </div>
 
@@ -245,6 +261,9 @@
       <span id="user-nombre">—</span>
       <span class="user-territorio" id="user-territorio"></span>
       <button class="btn-logout" onclick="cerrarSesion()">Salir</button>
+    </div>
+    <div class="modo-lectura-chip app-oculta" id="modo-lectura-chip">
+      👁 Modo solo lectura · <a onclick="cerrarSesion()">Iniciar sesión para editar</a>
     </div>
   </div>
 </div>
@@ -275,7 +294,7 @@
   <div class="leg"><div class="leg-dot" style="background:var(--vac-bg);border:1px solid var(--vac);"></div>Vacaciones</div>
   <div class="leg"><div class="leg-dot" style="background:var(--nr-bg);border:1px solid var(--nr);"></div>No remunerado</div>
   <div class="leg"><div class="leg-dot" style="background:var(--aus-bg);border:1px solid #ddd;"></div>Sin asignar</div>
-  <span class="leg-tip">Clic en cualquier celda para editar · Guardar cuando termines</span>
+  <span class="leg-tip" id="leg-tip">Clic en cualquier celda para editar · Guardar cuando termines</span>
 </div>
 
 <!-- TABLA -->
@@ -434,6 +453,7 @@ let sesionCorreo     = null;
 let sesionClave      = null;
 let sesionNombre     = null;
 let sesionTerritorio = null;
+let soloLectura      = false; // true = puede ver todos los horarios pero no editar ni guardar
 
 function initSesion() {
   let guardada = null;
@@ -503,16 +523,36 @@ async function verificarLogin(correo, clave, silencioso) {
 }
 
 function mostrarApp() {
+  soloLectura = false;
   document.getElementById('login-overlay').style.display = 'none';
   document.querySelectorAll('.app-oculta').forEach(el => el.classList.remove('app-oculta'));
+  document.getElementById('modo-lectura-chip').classList.add('app-oculta');
+  document.getElementById('user-chip').style.display   = 'flex';
+  document.getElementById('btn-guardar').style.display = 'inline-block';
+  document.getElementById('save-status').style.display  = 'inline';
   document.getElementById('user-nombre').textContent     = sesionNombre;
   document.getElementById('user-territorio').textContent = sesionTerritorio ? ('· ' + sesionTerritorio) : '';
   document.getElementById('user-avatar').textContent     = (sesionNombre||'?').trim().charAt(0).toUpperCase();
+  document.getElementById('leg-tip').textContent = 'Clic en cualquier celda para editar · Guardar cuando termines';
+  cargarEmpleados();
+}
+
+// ── VER SIN INICIAR SESIÓN (solo lectura, ve todos los horarios) ──
+function verSoloLectura() {
+  soloLectura = true;
+  document.getElementById('login-overlay').style.display = 'none';
+  document.querySelectorAll('.app-oculta').forEach(el => el.classList.remove('app-oculta'));
+  document.getElementById('user-chip').style.display        = 'none';
+  document.getElementById('btn-guardar').style.display       = 'none';
+  document.getElementById('save-status').style.display       = 'none';
+  document.getElementById('modo-lectura-chip').classList.remove('app-oculta');
+  document.body.classList.add('solo-lectura');
+  document.getElementById('leg-tip').textContent = 'Vista de solo lectura — no puedes editar ni guardar cambios';
   cargarEmpleados();
 }
 
 function cerrarSesion() {
-  if (Object.keys(cambios).length > 0) {
+  if (!soloLectura && Object.keys(cambios).length > 0) {
     if (!confirm('Tienes cambios sin guardar. ¿Salir de todas formas?')) return;
   }
   sesionCorreo = sesionClave = sesionNombre = sesionTerritorio = null;
@@ -669,6 +709,7 @@ function renderTabla() {
 
 // ── MODAL ─────────────────────────────────────────────────────
 function abrirModal(cedula, nombre, fecha, fechaCorta) {
+  if(soloLectura) return; // modo solo lectura: no se puede editar
   celdaActiva = {cedula, fecha};
   document.getElementById('m-nombre').textContent = nombre;
   document.getElementById('m-fecha').textContent  = fechaCorta;
@@ -809,6 +850,7 @@ let celdaCtx  = null; // celda del clic derecho
 function abrirContextMenu(e, cedula, fecha) {
   e.preventDefault();
   e.stopPropagation();
+  if(soloLectura) return; // modo solo lectura: sin menú de copiar/borrar
   celdaCtx = { cedula, fecha };
 
   const menu = document.getElementById('ctx-menu');
