@@ -40,6 +40,39 @@
     .save-status{font-size:12px;color:#666;}
     .save-status.ok{color:#4caf50;}
     .save-status.err{color:#f44;}
+    .user-chip{display:flex;align-items:center;gap:6px;font-size:12px;color:#ccc;background:#1a1a1a;
+      border-radius:20px;padding:4px 10px 4px 4px;}
+    .user-chip .user-avatar{width:20px;height:20px;border-radius:50%;background:var(--rappi);
+      display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;}
+    .user-chip .user-territorio{color:#888;font-size:10px;}
+    .btn-logout{background:transparent;border:none;color:#888;font-size:11px;cursor:pointer;
+      text-decoration:underline;padding:0;}
+    .btn-logout:hover{color:#ccc;}
+
+    /* ── LOGIN ── */
+    .login-overlay{position:fixed;inset:0;background:var(--dark);z-index:500;
+      display:flex;align-items:center;justify-content:center;padding:20px;}
+    .login-card{background:var(--white);border-radius:16px;width:100%;max-width:340px;
+      padding:28px 26px;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+    .login-logo{width:36px;height:36px;background:var(--rappi);border-radius:9px;display:flex;
+      align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:700;margin-bottom:12px;}
+    .login-title{font-size:16px;font-weight:600;color:var(--dark);margin-bottom:4px;}
+    .login-sub{font-size:12px;color:var(--mid);margin-bottom:20px;}
+    .login-row{margin-bottom:12px;}
+    .login-label{font-size:11px;font-weight:500;color:var(--mid);margin-bottom:4px;display:block;
+      text-transform:uppercase;letter-spacing:.3px;}
+    .login-input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;
+      font-family:'DM Sans',sans-serif;font-size:14px;color:var(--dark);outline:none;}
+    .login-input:focus{border-color:var(--rappi);}
+    .login-error{font-size:12px;color:#c62828;margin-bottom:12px;display:none;}
+    .btn-login{width:100%;padding:11px;border-radius:8px;border:none;background:var(--rappi);
+      color:#fff;cursor:pointer;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;}
+    .btn-login:disabled{background:#999;cursor:not-allowed;}
+    .btn-login .spinner{display:inline-block;width:12px;height:12px;border:2px solid #fff;
+      border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;
+      vertical-align:middle;margin-right:6px;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+    .app-oculta{display:none;}
 
     /* ── FILTROS ── */
     .filtros{background:var(--white);border-bottom:1px solid var(--border);padding:12px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
@@ -176,8 +209,29 @@
 </head>
 <body>
 
+<!-- ══ LOGIN — ACCESO RESTRINGIDO ══════════════════════ -->
+<div class="login-overlay" id="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">R</div>
+    <div class="login-title">Acceso restringido</div>
+    <div class="login-sub">Ingresa con tu correo de Rappi para editar los horarios.</div>
+    <div class="login-row">
+      <span class="login-label">Correo</span>
+      <input class="login-input" type="email" id="login-correo" placeholder="tu.correo@rappi.com"
+        onkeydown="if(event.key==='Enter') document.getElementById('login-clave').focus()">
+    </div>
+    <div class="login-row">
+      <span class="login-label">Clave</span>
+      <input class="login-input" type="password" id="login-clave" placeholder="Tu clave"
+        onkeydown="if(event.key==='Enter') intentarLogin()">
+    </div>
+    <div class="login-error" id="login-error"></div>
+    <button class="btn-login" id="btn-login" onclick="intentarLogin()">Ingresar</button>
+  </div>
+</div>
+
 <!-- TOP BAR -->
-<div class="topbar">
+<div class="topbar app-oculta" id="app-topbar">
   <div class="topbar-left">
     <div class="logo">R</div>
     <span class="topbar-title">Editor de Horarios</span>
@@ -186,11 +240,17 @@
   <div class="topbar-right">
     <span class="save-status" id="save-status"></span>
     <button class="btn btn-rappi" id="btn-guardar" onclick="guardarTodo()" disabled>Guardar cambios</button>
+    <div class="user-chip" id="user-chip">
+      <div class="user-avatar" id="user-avatar">?</div>
+      <span id="user-nombre">—</span>
+      <span class="user-territorio" id="user-territorio"></span>
+      <button class="btn-logout" onclick="cerrarSesion()">Salir</button>
+    </div>
   </div>
 </div>
 
 <!-- FILTROS -->
-<div class="filtros">
+<div class="filtros app-oculta" id="app-filtros">
   <div class="filtro-group">
     <span class="filtro-label">Rol:</span>
     <div class="rol-tabs">
@@ -208,7 +268,7 @@
 </div>
 
 <!-- LEYENDA -->
-<div class="leyenda">
+<div class="leyenda app-oculta" id="app-leyenda">
   <div class="leg"><div class="leg-dot" style="background:var(--ok-bg);border:1px solid var(--ok);"></div>Trabajo</div>
   <div class="leg"><div class="leg-dot" style="background:var(--de-bg);border:1px solid var(--de);"></div>Descanso</div>
   <div class="leg"><div class="leg-dot" style="background:var(--inc-bg);border:1px solid var(--inc);"></div>Incapacidad</div>
@@ -219,7 +279,7 @@
 </div>
 
 <!-- TABLA -->
-<div class="tabla-wrap">
+<div class="tabla-wrap app-oculta" id="app-tabla">
   <div class="tabla-inner">
     <table>
       <thead id="thead"></thead>
@@ -368,6 +428,97 @@ let horarios    = {}; // {cedula: {fecha: {tipo,entrada,salida,punto}}}
 let cambios     = {}; // cambios pendientes de guardar
 let celdaActiva = null;
 let tipoActivo  = "trabajo";
+
+// ── SESIÓN (acceso restringido) ────────────────────────────────
+let sesionCorreo     = null;
+let sesionClave      = null;
+let sesionNombre     = null;
+let sesionTerritorio = null;
+
+function initSesion() {
+  let guardada = null;
+  try { guardada = JSON.parse(sessionStorage.getItem('rappi_horarios_sesion') || 'null'); } catch(e) {}
+  if (guardada && guardada.correo && guardada.clave) {
+    verificarLogin(guardada.correo, guardada.clave, true);
+  }
+}
+
+async function intentarLogin() {
+  const correo = document.getElementById('login-correo').value.trim();
+  const clave  = document.getElementById('login-clave').value.trim();
+  const errEl  = document.getElementById('login-error');
+  errEl.style.display = 'none';
+
+  if (!correo || !clave) {
+    errEl.textContent = 'Ingresa tu correo y tu clave.';
+    errEl.style.display = 'block';
+    return;
+  }
+  verificarLogin(correo, clave, false);
+}
+
+async function verificarLogin(correo, clave, silencioso) {
+  const btn   = document.getElementById('btn-login');
+  const errEl = document.getElementById('login-error');
+  if (!silencioso) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Verificando...';
+  }
+
+  try {
+    const r = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'verificarAcceso', correo, clave })
+    });
+    const d = await r.json();
+
+    if (d.ok) {
+      sesionCorreo     = correo;
+      sesionClave      = clave;
+      sesionNombre     = d.nombre || correo;
+      sesionTerritorio = d.territorio || '';
+      try {
+        sessionStorage.setItem('rappi_horarios_sesion', JSON.stringify({ correo, clave }));
+      } catch(e) {}
+      mostrarApp();
+    } else {
+      if (silencioso) {
+        // Sesión guardada ya no es válida — pedir login de nuevo
+        try { sessionStorage.removeItem('rappi_horarios_sesion'); } catch(e) {}
+        return;
+      }
+      errEl.textContent = d.error || 'Correo o clave incorrectos.';
+      errEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Ingresar';
+    }
+  } catch(e) {
+    if (!silencioso) {
+      errEl.textContent = 'Error de conexión — intenta de nuevo.';
+      errEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Ingresar';
+    }
+  }
+}
+
+function mostrarApp() {
+  document.getElementById('login-overlay').style.display = 'none';
+  document.querySelectorAll('.app-oculta').forEach(el => el.classList.remove('app-oculta'));
+  document.getElementById('user-nombre').textContent     = sesionNombre;
+  document.getElementById('user-territorio').textContent = sesionTerritorio ? ('· ' + sesionTerritorio) : '';
+  document.getElementById('user-avatar').textContent     = (sesionNombre||'?').trim().charAt(0).toUpperCase();
+  cargarEmpleados();
+}
+
+function cerrarSesion() {
+  if (Object.keys(cambios).length > 0) {
+    if (!confirm('Tienes cambios sin guardar. ¿Salir de todas formas?')) return;
+  }
+  sesionCorreo = sesionClave = sesionNombre = sesionTerritorio = null;
+  try { sessionStorage.removeItem('rappi_horarios_sesion'); } catch(e) {}
+  location.reload();
+}
 
 // ── UTILIDADES ────────────────────────────────────────────────
 function getSemana() {
@@ -590,6 +741,11 @@ function aplicarCelda() {
 // ── GUARDAR EN SHEET ──────────────────────────────────────────
 async function guardarTodo() {
   if(Object.keys(cambios).length===0) return;
+  if(!sesionCorreo || !sesionClave){
+    toast('Tu sesión expiró — vuelve a ingresar',false);
+    cerrarSesion();
+    return;
+  }
   const btn = document.getElementById('btn-guardar');
   btn.disabled = true;
   btn.textContent = 'Guardando...';
@@ -600,11 +756,25 @@ async function guardarTodo() {
       action: 'saveHorarios',
       sheetId: SHEET_ID,
       rol: rolActivo,
-      cambios: cambios
+      cambios: cambios,
+      correo: sesionCorreo,
+      clave: sesionClave
     });
-    await fetch(SCRIPT_URL, {
+    const r = await fetch(SCRIPT_URL, {
       method:'POST', body: payload
     });
+    const d = await r.json();
+
+    if(d && d.ok === false){
+      document.getElementById('save-status').textContent = d.error || 'No autorizado';
+      document.getElementById('save-status').className  = 'save-status err';
+      btn.disabled = false;
+      btn.textContent = 'Guardar cambios';
+      toast(d.error || 'No autorizado para guardar — vuelve a ingresar',false);
+      cerrarSesion();
+      return;
+    }
+
     cambios = {};
     document.getElementById('save-status').textContent = '✓ Guardado';
     document.getElementById('save-status').className  = 'save-status ok';
@@ -855,8 +1025,8 @@ function activarGuardar() {
 // Alerta si hay cambios sin guardar
 window.onbeforeunload = () => Object.keys(cambios).length>0 ? true : undefined;
 
-// Iniciar
-cargarEmpleados();
+// Iniciar — primero pide acceso, y solo si es válido carga el horario
+initSesion();
 
 
 
