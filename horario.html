@@ -71,6 +71,7 @@
     .h-dia.inc{background:#e7f2fe;border:1px solid #b3d4f5;}
     .h-dia.vac{background:#f3e5f5;border:1px solid #ce93d8;}
     .h-dia.no_rem{background:#eceff1;border:1px solid #b0bec5;}
+    .h-dia.especial{background:#fce4ec;border:1px solid #f48fb1;}
     .h-dia.sin{background:#f5f5f3;border:1px solid #e0e0e0;}
     .h-dia.hoy-ring{outline:2px solid #ff441b;outline-offset:2px;}
     #turno-inicio, #turno-fin{margin-bottom:0;}
@@ -889,13 +890,14 @@ async function fetchHorario(cedula) {
            +'</div>';
       }
       var fecha=semana[i], esH=esHoyH(fecha), tipo=dia.tipo||'sin';
-      var clrMap={'trabajo':'#0f6e56','descanso':'#854f0b','inc':'#185fa5','vac':'#6a1b9a','no_rem':'#37474f','sin':'#888'};
-      var lblMap={'trabajo':'Trabajo','descanso':'Descanso','inc':'Incapacidad','vac':'Vacaciones','no_rem':'No remunerado','sin':'Sin asignar'};
-      var bgMap={'trabajo':'#0f6e56','descanso':'#854f0b','inc':'#185fa5','vac':'#6a1b9a','no_rem':'#37474f','sin':'#ccc'};
+      var clrMap={'trabajo':'#0f6e56','descanso':'#854f0b','inc':'#185fa5','vac':'#6a1b9a','no_rem':'#37474f','especial':'#c2185b','sin':'#888'};
+      var lblMap={'trabajo':'Trabajo','descanso':'Descanso','inc':'Incapacidad','vac':'Vacaciones','no_rem':'No remunerado','especial':'Día especial','sin':'Sin asignar'};
+      var bgMap={'trabajo':'#0f6e56','descanso':'#854f0b','inc':'#185fa5','vac':'#6a1b9a','no_rem':'#37474f','especial':'#c2185b','sin':'#ccc'};
       var clr=clrMap[tipo]||'#888', lbl=lblMap[tipo]||'', bg=bgMap[tipo]||'#ccc';
       var numClr=esH?'#ff441b':clr, dowClr=esH?'#ff441b':'#666';
       var detalle='';
       if(tipo==='trabajo') detalle='<div style="font-size:16px;font-weight:700;font-family:monospace;color:'+clr+';margin-top:6px;">'+(dia.entrada||'')+' → '+(dia.salida||'')+'</div>'+(dia.punto?'<div style="font-size:11px;color:'+clr+';opacity:.8;margin-top:2px;">📍 '+dia.punto+'</div>':'');
+      else if(tipo==='especial') detalle='<div style="font-size:13px;color:'+clr+';margin-top:6px;">'+lbl+(dia.punto?' — '+dia.punto:'')+'</div>';
       else if(tipo!=='sin') detalle='<div style="font-size:13px;color:'+clr+';margin-top:6px;">'+lbl+'</div>';
       out+='<div class="h-dia '+tipo+(esH?' hoy-ring':'')+'"><div style="display:flex;align-items:center;justify-content:space-between;">'
           +'<div style="display:flex;align-items:center;gap:12px;"><div style="text-align:center;min-width:34px;">'
