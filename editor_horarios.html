@@ -20,6 +20,7 @@
       --inc: #185fa5; --inc-bg: #e7f2fe;
       --vac: #6a1b9a; --vac-bg: #f3e5f5;
       --nr: #37474f; --nr-bg: #eceff1;
+      --esp: #c2185b; --esp-bg: #fce4ec;
       --aus: #999; --aus-bg: #f5f5f3;
     }
     *{box-sizing:border-box;margin:0;padding:0;}
@@ -133,6 +134,7 @@
     .celda.inc{background:var(--inc-bg);}
     .celda.vac{background:var(--vac-bg);}
     .celda.no_rem{background:var(--nr-bg);}
+    .celda.especial{background:var(--esp-bg);}
     .celda.sin{background:var(--aus-bg);}
     .celda.hoy-ring{border-color:var(--rappi) !important;}
     .c-hora{font-size:11px;font-weight:500;font-family:'DM Mono',monospace;}
@@ -141,7 +143,9 @@
     .celda.inc .c-hora{color:var(--inc);}
     .celda.vac .c-hora{color:var(--vac);}
     .celda.no_rem .c-hora{color:var(--nr);}
+    .celda.especial .c-hora{color:var(--esp);}
     .celda.sin .c-hora{color:var(--aus);}
+    .celda.especial .c-punto{color:var(--esp);}
     .c-punto{font-size:10px;color:var(--ok);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.8;}
     .c-add{font-size:18px;color:#ccc;}
 
@@ -166,8 +170,11 @@
     .tipo-btn.sel-inc{border-color:var(--inc);background:var(--inc-bg);color:var(--inc);}
     .tipo-btn.sel-vac{border-color:var(--vac);background:var(--vac-bg);color:var(--vac);}
     .tipo-btn.sel-no_rem{border-color:var(--nr);background:var(--nr-bg);color:var(--nr);}
+    .tipo-btn.sel-especial{border-color:var(--esp);background:var(--esp-bg);color:var(--esp);}
     .form-trabajo{display:none;}
     .form-trabajo.visible{display:block;}
+    .form-especial{display:none;}
+    .form-especial.visible{display:block;}
     .form-row{margin-bottom:12px;}
     .form-label{font-size:11px;font-weight:500;color:var(--mid);margin-bottom:4px;display:block;text-transform:uppercase;letter-spacing:.3px;}
     .hora-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
@@ -268,6 +275,14 @@
   </div>
 </div>
 
+<!-- BARRA DE MODO COPIA -->
+<div class="copy-bar" id="copy-bar">
+  <span class="copy-pill" id="copy-desc">—</span>
+  <button class="copy-action pegar" id="btn-pegar-persona" style="display:none;" onclick="pegarEnPersona()">Pegar en persona…</button>
+  <button class="copy-action pegar" id="btn-pegar-semana" style="display:none;" onclick="pegarSemanaCompleta()">Pegar en semana completa →</button>
+  <button class="copy-action cancelar" onclick="cancelarCopia()">Cancelar</button>
+</div>
+
 <!-- FILTROS -->
 <div class="filtros app-oculta" id="app-filtros">
   <div class="filtro-group">
@@ -293,6 +308,7 @@
   <div class="leg"><div class="leg-dot" style="background:var(--inc-bg);border:1px solid var(--inc);"></div>Incapacidad</div>
   <div class="leg"><div class="leg-dot" style="background:var(--vac-bg);border:1px solid var(--vac);"></div>Vacaciones</div>
   <div class="leg"><div class="leg-dot" style="background:var(--nr-bg);border:1px solid var(--nr);"></div>No remunerado</div>
+  <div class="leg"><div class="leg-dot" style="background:var(--esp-bg);border:1px solid var(--esp);"></div>Día especial</div>
   <div class="leg"><div class="leg-dot" style="background:var(--aus-bg);border:1px solid #ddd;"></div>Sin asignar</div>
   <span class="leg-tip" id="leg-tip">Clic en cualquier celda para editar · Guardar cuando termines</span>
 </div>
@@ -343,6 +359,19 @@
         <button class="tipo-btn" id="tb-inc"       onclick="selTipo('inc')">Incapacidad</button>
         <button class="tipo-btn" id="tb-vac"       onclick="selTipo('vac')">Vacaciones</button>
         <button class="tipo-btn" id="tb-no_rem"    onclick="selTipo('no_rem')">No remunerado</button>
+        <button class="tipo-btn" id="tb-especial"  onclick="selTipo('especial')">Día especial</button>
+      </div>
+      <div class="form-especial" id="form-especial">
+        <div class="form-row">
+          <span class="form-label">Tipo de día especial</span>
+          <select class="form-select" id="inp-especial">
+            <option value="">-- Selecciona --</option>
+            <option value="Cumpleaños">Cumpleaños</option>
+            <option value="Día de la familia">Día de la familia</option>
+            <option value="Off votaciones 4 horas">Off votaciones 4 horas</option>
+            <option value="Día bicicleta">Día bicicleta</option>
+          </select>
+        </div>
       </div>
       <div class="form-trabajo" id="form-trabajo">
         <div class="form-row">
@@ -685,6 +714,9 @@ function renderTabla() {
         inner = `<div class="c-hora">VAC</div>`;
       } else if(cls==='no_rem'){
         inner = `<div class="c-hora">NR</div>`;
+      } else if(cls==='especial'){
+        inner = `<div class="c-hora">ESP</div>`;
+        if(dia.punto) inner += `<div class="c-punto">${dia.punto}</div>`;
       } else {
         inner = `<div class="c-add">+</div>`;
       }
@@ -729,6 +761,10 @@ function abrirModal(cedula, nombre, fecha, fechaCorta) {
     if(dia.punto) document.getElementById('inp-punto').value = dia.punto;
   }
 
+  if(tipo==='especial'){
+    document.getElementById('inp-especial').value = dia.punto||'';
+  }
+
   // Mostrar/ocultar punto según rol
   document.getElementById('row-punto').style.display = rolActivo==='Brigadista' ? 'block' : 'none';
   document.getElementById('modal').style.display = 'flex';
@@ -741,13 +777,15 @@ function cerrarModal() {
 
 function selTipo(t) {
   tipoActivo = t;
-  ['trabajo','descanso','inc','vac','no_rem'].forEach(x => {
+  ['trabajo','descanso','inc','vac','no_rem','especial'].forEach(x => {
     const btn = document.getElementById('tb-'+x);
     btn.className = 'tipo-btn';
     if(x===t) btn.classList.add('sel-'+t);
   });
   document.getElementById('form-trabajo').className =
     'form-trabajo' + (t==='trabajo'?' visible':'');
+  document.getElementById('form-especial').className =
+    'form-especial' + (t==='especial'?' visible':'');
 }
 
 function aplicarCelda() {
@@ -765,6 +803,12 @@ function aplicarCelda() {
     dia.entrada = entrada;
     dia.salida  = salida;
     if(rolActivo==='Brigadista') dia.punto = document.getElementById('inp-punto').value;
+  }
+
+  if(tipoActivo==='especial'){
+    const esp = document.getElementById('inp-especial').value;
+    if(!esp){ toast("Selecciona el tipo de día especial",false); return; }
+    dia.punto = esp;
   }
 
   horarios[cedula][fecha] = dia;
