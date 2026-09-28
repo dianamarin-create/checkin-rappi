@@ -73,7 +73,7 @@
       border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;
       vertical-align:middle;margin-right:6px;}
     @keyframes spin{to{transform:rotate(360deg);}}
-    .app-oculta{display:none;}
+    .app-oculta{display:none !important;}
     .login-sep{display:flex;align-items:center;gap:10px;margin:16px 0 12px;}
     .login-sep .linea{flex:1;height:1px;background:var(--border);}
     .login-sep span{font-size:11px;color:var(--mid);}
@@ -212,6 +212,9 @@
     .celda.origen{border:2px solid #ff441b !important;box-shadow:0 0 0 2px rgba(255,68,27,.2);}
     /* Celda en modo destino (hover) */
     .celda.destino-hover{border:2px dashed #ff441b !important;transform:scale(1.05);}
+    /* Celda que puede recibir el pegado mientras el modo copia está activo */
+    .celda.destino-target{cursor:copy;}
+    .celda.destino-target:hover{border:2px dashed #ff441b !important;background:rgba(255,68,27,.06);}
     /* Menú contextual de copia */
     .ctx-menu{position:fixed;background:#fff;border-radius:12px;
       box-shadow:0 8px 24px rgba(0,0,0,.15);border:0.5px solid var(--border);
@@ -370,6 +373,7 @@
             <option value="Día de la familia">Día de la familia</option>
             <option value="Off votaciones 4 horas">Off votaciones 4 horas</option>
             <option value="Día bicicleta">Día bicicleta</option>
+            <option value="Licencia por luto">Licencia por luto</option>
           </select>
         </div>
       </div>
@@ -553,9 +557,12 @@ async function verificarLogin(correo, clave, silencioso) {
 
 function mostrarApp() {
   soloLectura = false;
+  document.body.classList.remove('solo-lectura');
   document.getElementById('login-overlay').style.display = 'none';
   document.querySelectorAll('.app-oculta').forEach(el => el.classList.remove('app-oculta'));
-  document.getElementById('modo-lectura-chip').classList.add('app-oculta');
+  const chipLectura = document.getElementById('modo-lectura-chip');
+  chipLectura.classList.add('app-oculta');
+  chipLectura.style.display = 'none'; // doble seguro: por si algún caché viejo no trae la clase app-oculta
   document.getElementById('user-chip').style.display   = 'flex';
   document.getElementById('btn-guardar').style.display = 'inline-block';
   document.getElementById('save-status').style.display  = 'inline';
@@ -919,6 +926,7 @@ function copiarDia() {
   const emp = empleados.find(e => e.cedula === cedula);
   const desc = 'Copiando día ' + fecha + ' de ' + (emp ? emp.nombre.split(' ')[0] : cedula);
   activarModoCopia(desc, false, false);
+  renderTabla();
   toast('Haz clic en cualquier celda para pegar el turno');
 }
 
@@ -927,19 +935,22 @@ function copiarSemanaPersona() {
   if(!celdaCtx) return;
   const { cedula } = celdaCtx;
   const semana = getSemana();
-  const dias = {};
-  semana.forEach(d => {
+  // Array de 7 posiciones (Lun..Dom), con null en los días sin turno —
+  // así el pegado siempre calza día-con-día por posición, sin desalinearse
+  // cuando hay días vacíos en medio de la semana.
+  const dias = semana.map(d => {
     const f = fmtFecha(d);
     const dia = (horarios[cedula]||{})[f];
-    if(dia) dias[f] = {...dia};
+    return dia ? {...dia} : null;
   });
 
-  if(Object.keys(dias).length === 0) { toast('No hay horario esta semana para copiar'); return; }
+  if(dias.every(d => !d)) { toast('No hay horario esta semana para copiar'); return; }
 
   modoCopia = { tipo: 'semana_persona', cedula, dias, semanaOffset };
   const emp = empleados.find(e => e.cedula === cedula);
   const desc = 'Semana de ' + (emp ? emp.nombre.split(' ')[0] : cedula) + ' copiada';
   activarModoCopia(desc, true, false);
+  renderTabla();
   toast('Elige "Pegar semana en persona" o haz clic en un nombre de fila');
 }
 
@@ -960,6 +971,7 @@ function copiarSemanaATodos() {
 
   modoCopia = { tipo: 'semana_todos', snapshot, semanaOffset };
   activarModoCopia(`Semana completa de ${emp.length} personas copiada`, false, true);
+  renderTabla();
   toast('Haz clic en "Pegar en semana completa →" para aplicar a la semana siguiente');
 }
 
@@ -1007,26 +1019,20 @@ function pegarEnCelda(cedula, fecha) {
 function pegarSemanaEnPersona(cedulaDestino) {
   if(!modoCopia || modoCopia.tipo !== 'semana_persona') return;
 
-  const semanaOrigen = modoCopia.dias;
+  const semanaOrigen = modoCopia.dias; // array de 7, por posición Lun..Dom
   const semanaActual = getSemana();
-
-  // Mapear fechas origen → fechas destino por posición de día de la semana
-  const fechasOrigen = Object.keys(semanaOrigen).sort();
-
-  // Obtener la semana origen para calcular el desplazamiento
-  const offsetDias = (semOffset - modoCopia.semanaOffset) * 7;
 
   if(!horarios[cedulaDestino]) horarios[cedulaDestino] = {};
   if(!cambios[cedulaDestino])  cambios[cedulaDestino]  = {};
 
   semanaActual.forEach((d, i) => {
     const fDest = fmtFecha(d);
-    // Buscar el día equivalente en el origen (mismo índice de semana)
-    const fOrigen = fechasOrigen[i];
-    if(fOrigen && semanaOrigen[fOrigen]) {
-      const dia = {...semanaOrigen[fOrigen]};
-      horarios[cedulaDestino][fDest] = dia;
-      cambios[cedulaDestino][fDest]  = dia;
+    // Mismo día de la semana por posición (0=Lun ... 6=Dom) — sin depender
+    // de qué días tenían turno asignado en el origen.
+    const dia = semanaOrigen[i];
+    if(dia) {
+      horarios[cedulaDestino][fDest] = {...dia};
+      cambios[cedulaDestino][fDest]  = {...dia};
     }
   });
 
